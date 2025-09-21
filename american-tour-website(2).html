@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODYSSEY | A Journey Through All 50 States</title>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --aurora-1: #00F5FF;
+            --aurora-2: #FF00E5;
+            --aurora-3: #00FF88;
+            --gold: #FFD700;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            cursor: default;
+        }
+
+        /* Custom Cursor */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--aurora-1);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.1s ease;
+            mix-blend-mode: difference;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(ellipse at top, #0a0a0a, #000);
+            overflow: hidden;
+        }
+
+        /* Aurora Background */
+        .aurora-bg {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: linear-gradient(45deg, var(--aurora-1), var(--aurora-2), var(--aurora-3));
+            filter: blur(100px);
+            opacity: 0.3;
+            animation: aurora 20s ease-in-out infinite;
+        }
+
+        @keyframes aurora {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            33% { transform: rotate(120deg) scale(1.2); }
+            66% { transform: rotate(240deg) scale(0.8); }
+        }
+
+        /* Title Animation */
+        .hero-title {
+            font-size: clamp(4rem, 12vw, 10rem);
+            font-weight: 100;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #fff, var(--aurora-1), #fff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s linear infinite;
+            z-index: 2;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .hero-subtitle {
+            margin-top: 2rem;
+            font-size: 1.2rem;
+            letter-spacing: 0.3em;
+            opacity: 0.6;
+            text-transform: uppercase;
+            animation: fadeIn 2s ease 0.5s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 0.6; transform: translateY(0); }
+        }
+
+        /* Glass Card Navigation */
+        .nav-cards {
+            position: absolute;
+            bottom: 50px;
+            display: flex;
+            gap: 2rem;
+            z-index: 3;
+        }
+
+        .nav-card {
+            padding: 1.5rem 2.5rem;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.075, 0.82, 0.165, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .nav-card:hover::before {
+            left: 100%;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 255, 255, 0.2);
+        }
+
+        /* Immersive Gallery */
+        .gallery {
+            padding: 10rem 0;
+            position: relative;
+            background: linear-gradient(180deg, #000, #0a0a0a);
+        }
+
+        .gallery-header {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+
+        .section-label {
+            font-size: 0.9rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--aurora-1);
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 200;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        /* Dynamic Scrolling Destinations */
+        .destinations-scroller {
+            position: relative;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            overflow: hidden;
+        }
+
+        .destinations-track {
+            display: flex;
+            gap: 2rem;
+            transition: transform 0.5s ease;
+            padding: 2rem 0;
+        }
+
+        .scroller-controls {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 10;
+            padding: 0 1rem;
+        }
+
+        .scroll-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            pointer-events: all;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scroll-btn:hover {
+            background: rgba(0, 245, 255, 0.2);
+            border-color: var(--aurora-1);
+            transform: scale(1.1);
+        }
+
+        .destination-card {
+            min-width: 400px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+
+        .destination-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.2), rgba(255, 0, 229, 0.2));
+            opacity: 0;
+            transition: opacity 0.4s;
+            z-index: 2;
+        }
+
+        .destination-card:hover::before {
+            opacity: 1;
+        }
+
+        .destination-card:hover {
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 30px 80px rgba(0, 245, 255, 0.3);
+        }
+
+        .destination-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.8s ease;
+        }
+
+        .destination-card:hover .destination-bg {
+            transform: scale(1.1);
+        }
+
+        .destination-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 3rem 2rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            transform: translateY(100px);
+            transition: transform 0.4s ease;
+        }
+
+        .destination-card:hover .destination-content {
+            transform: translateY(0);
+        }
+
+        .destination-number {
+            font-size: 4rem;
+            font-weight: 100;
+            opacity: 0.3;
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+        }
+
+        .destination-name {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        .destination-state {
+            color: var(--aurora-1);
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .destination-description {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+
+        .destination-details {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .travel-time {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            opacity: 0.9;
+        }
+
+        /* Interactive Map */
+        .map-section {
+            padding: 8rem 2rem;
+            background: radial-gradient(circle at center, #0a0a0a, #000);
+            position: relative;
+        }
+
+        .map-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .glass-map {
+            width: 100%;
+            height: 700px;
+            background: var(--glass);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Animated Path */
+        .journey-path {
+            position: absolute;
+            width: 80%;
+            height: 60%;
+        }
+
+        .path-line {
+            stroke: var(--aurora-1);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawPath 5s ease forwards;
+            filter: drop-shadow(0 0 10px var(--aurora-1));
+        }
+
+        @keyframes drawPath {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Stats Section */
+        .stats-section {
+            padding: 6rem 2rem;
+            background: #000;
+        }
+
+        .stats-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .stat-box {
+            padding: 4rem;
+            background: #000;
+            text-align: center;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .stat-box::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, var(--aurora-2), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .stat-box:hover::after {
+            opacity: 0.1;
+        }
+
+        .stat-value {
+            font-size: 4rem;
+            font-weight: 100;
+            background: linear-gradient(135deg, var(--aurora-1), var(--aurora-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-desc {
+            margin-top: 1rem;
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            opacity: 0.5;
+        }
+
+        /* Experience Section */
+        .experience {
+            padding: 8rem 2rem;
+            background: linear-gradient(180deg, #000, #0a0a0a);
+            text-align: center;
+        }
+
+        .experience-cards {
+            max-width: 1200px;
+            margin: 4rem auto 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .exp-card {
+            padding: 3rem 2rem;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            position: relative;
+            transition: all 0.4s ease;
+            overflow: hidden;
+        }
+
+        .exp-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--aurora-1), var(--aurora-2), var(--aurora-3));
+            border-radius: 20px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.4s;
+        }
+
+        .exp-card:hover::before {
+            opacity: 1;
+        }
+
+        .exp-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .exp-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .exp-title {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+        }
+
+        .exp-desc {
+            opacity: 0.6;
+            line-height: 1.6;
+        }
+
+        /* CTA Section */
+        .final-cta {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: radial-gradient(circle at center, #0a0a0a, #000);
+            overflow: hidden;
+        }
+
+        .cta-content {
+            text-align: center;
+            z-index: 2;
+        }
+
+        .cta-title {
+            font-size: clamp(3rem, 7vw, 6rem);
+            font-weight: 100;
+            margin-bottom: 2rem;
+            letter-spacing: 0.1em;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 2rem 4rem;
+            font-size: 1.1rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            text-decoration: none;
+            color: #fff;
+            background: linear-gradient(135deg, var(--aurora-1), var(--aurora-2));
+            border-radius: 50px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .cta-button:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 60px rgba(0, 245, 255, 0.4);
+        }
+
+        /* Particles */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--aurora-1);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: floatUp 10s linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .destinations {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-cards {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        /* Mapbox Styles - Critical positioning fixes */
+        .mapboxgl-marker {
+            /* Reset any default styles that could affect positioning */
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+        }
+
+        .journey-marker {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 0;
+            border: none;
+            /* Ensure no transforms affect Mapbox positioning */
+        }
+
+        .journey-marker.completed {
+            background: linear-gradient(135deg, #00F5FF, #00FF88);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+        }
+
+        .journey-marker.current {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            animation: currentPulse 2s infinite;
+        }
+
+        @keyframes currentPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+            50% { transform: scale(1.2); box-shadow: 0 0 50px rgba(255, 215, 0, 1); }
+        }
+
+        .journey-marker.future {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .marker-number {
+            font-size: 11px;
+            font-weight: 600;
+            color: #000;
+            z-index: 2;
+        }
+
+        .journey-marker.future .marker-number {
+            color: #fff;
+        }
+
+        .marker-pulse {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .marker-pulse.current {
+            background: #FFD700;
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        .mapboxgl-popup {
+            max-width: 320px !important;
+        }
+
+        .mapboxgl-popup-content {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 0;
+            color: #fff;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .mapboxgl-popup-close-button {
+            color: #fff;
+            font-size: 20px;
+            padding: 5px 10px;
+        }
+
+        .mapboxgl-popup-close-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .journey-popup {
+            padding: 20px;
+        }
+
+        .journey-popup h3 {
+            font-size: 1.3rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--aurora-1), var(--aurora-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .journey-popup .address {
+            font-size: 0.9rem;
+            opacity: 0.6;
+            margin-bottom: 15px;
+        }
+
+        .journey-popup .description {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .journey-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .journey-stats span {
+            font-size: 0.9rem;
+        }
+
+        .marker-footer {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--aurora-1);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .map-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .map-control-btn {
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+
+        .map-control-btn:hover {
+            background: rgba(0, 245, 255, 0.2);
+            border-color: var(--aurora-1);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor"></div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="aurora-bg"></div>
+        <h1 class="hero-title">ODYSSEY</h1>
+        <p class="hero-subtitle">An Epic Journey • 50 States • Infinite Memories</p>
+        
+        <div class="nav-cards">
+            <div class="nav-card">
+                <span>Explore Route</span>
+            </div>
+            <div class="nav-card">
+                <span>View Destinations</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Destinations Gallery -->
+    <section class="gallery">
+        <div class="gallery-header">
+            <p class="section-label">Featured Destinations</p>
+            <h2 class="section-title">Where Dreams Meet Reality</h2>
+        </div>
+        
+        <div class="destinations-scroller">
+            <div class="destinations-track" id="destinations-track">
+                <!-- Dynamic content will be generated here by JavaScript -->
+            </div>
+            <div class="scroller-controls">
+                <button class="scroll-btn prev" onclick="scrollDestinations(-1)">‹</button>
+                <button class="scroll-btn next" onclick="scrollDestinations(1)">›</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Map -->
+    <section class="map-section">
+        <div class="gallery-header">
+            <p class="section-label">Your Journey</p>
+            <h2 class="section-title">50 States • 50 Sunsets • 50 Days</h2>
+        </div>
+        
+        <div class="map-container">
+            <div class="glass-map">
+                <div id="map"></div>
+                <div class="map-controls">
+                    <button class="map-control-btn" onclick="MegaAmericaMap.fitToJourney()">View All</button>
+                    <button class="map-control-btn" onclick="MegaAmericaMap.centerOnCurrent()">Current Location</button>
+                    <button class="map-control-btn" onclick="MegaAmericaMap.updateProgress((MegaAmericaMap.getCurrentDay() % 50) + 1)">Next Day</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-value">50</div>
+                <div class="stat-desc">States Explored</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">200+</div>
+                <div class="stat-desc">Scenic Locations</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">50</div>
+                <div class="stat-desc">Days of Adventure</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">∞</div>
+                <div class="stat-desc">Memories Created</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience -->
+    <section class="experience">
+        <div class="gallery-header">
+            <p class="section-label">The Experience</p>
+            <h2 class="section-title">What Awaits You</h2>
+        </div>
+        
+        <div class="experience-cards">
+            <div class="exp-card">
+                <div class="exp-icon">🏔️</div>
+                <h3 class="exp-title">Epic Landscapes</h3>
+                <p class="exp-desc">From towering mountains to endless deserts, witness nature's masterpieces.</p>
+            </div>
+            
+            <div class="exp-card">
+                <div class="exp-icon">🌅</div>
+                <h3 class="exp-title">Golden Hours</h3>
+                <p class="exp-desc">Capture stunning sunrises and sunsets at America's most photogenic spots.</p>
+            </div>
+            
+            <div class="exp-card">
+                <div class="exp-icon">🛣️</div>
+                <h3 class="exp-title">Iconic Routes</h3>
+                <p class="exp-desc">Drive legendary highways like Route 66 and the Pacific Coast Highway.</p>
+            </div>
+            
+            <div class="exp-card">
+                <div class="exp-icon">✨</div>
+                <h3 class="exp-title">Hidden Gems</h3>
+                <p class="exp-desc">Discover secret viewpoints and local treasures off the beaten path.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+        <div class="particles" id="particles"></div>
+        <div class="cta-content">
+            <h2 class="cta-title">Find Me Online</h2>
+            <div style="display: flex; gap: 2rem; justify-content: center;">
+                <a href="https://www.tiktok.com/@megaamerican?lang=en" class="cta-button" target="_blank">
+                    <img src="tiktok.png" alt="TikTok" style="width: 24px; height: 24px; margin-right: 10px; vertical-align: middle;">
+                    TikTok
+                </a>
+                <a href="https://www.instagram.com/megaamerican/?hl=en" class="cta-button" target="_blank">
+                    <img src="instagram.png" alt="Instagram" style="width: 24px; height: 24px; margin-right: 10px; vertical-align: middle;">
+                    Instagram
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Custom Cursor
+        const cursor = document.querySelector('.cursor');
+        let mouseX = 0;
+        let mouseY = 0;
+        let cursorX = 0;
+        let cursorY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateCursor() {
+            const dx = mouseX - cursorX;
+            const dy = mouseY - cursorY;
+            
+            cursorX += dx * 0.1;
+            cursorY += dy * 0.1;
+            
+            cursor.style.left = cursorX + 'px';
+            cursor.style.top = cursorY + 'px';
+            
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // Cursor hover effect
+        const hoverElements = document.querySelectorAll('a, .nav-card, .destination-card, .exp-card, .cta-button');
+        hoverElements.forEach(element => {
+            element.addEventListener('mouseenter', () => {
+                cursor.style.transform = 'scale(2)';
+                cursor.style.borderColor = 'var(--aurora-2)';
+            });
+            element.addEventListener('mouseleave', () => {
+                cursor.style.transform = 'scale(1)';
+                cursor.style.borderColor = 'var(--aurora-1)';
+            });
+        });
+
+        // Generate Particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 10 + 's';
+            particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+            particlesContainer.appendChild(particle);
+        }
+
+        // Parallax on scroll
+        window.addEventListener('scroll', () => {
+            const scrolled = window.scrollY;
+            const auroras = document.querySelectorAll('.aurora-bg');
+            auroras.forEach(aurora => {
+                aurora.style.transform = `translateY(${scrolled * 0.5}px)`;
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeIn 1s ease forwards';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.destination-card, .exp-card, .stat-box').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll for nav cards
+        document.querySelectorAll('.nav-card').forEach((card, index) => {
+            card.addEventListener('click', () => {
+                const sections = ['.gallery', '.map-section'];
+                const target = document.querySelector(sections[index] || 'body');
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Add glow effect on mouse move
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            document.querySelectorAll('.aurora-bg').forEach(aurora => {
+                aurora.style.background = `linear-gradient(${45 + x * 90}deg, var(--aurora-1), var(--aurora-2), var(--aurora-3))`;
+            });
+        });
+
+        // Journey Map Data and Functions
+        let currentJourneyDay = 1; // Currently at Maine - the beginning of the journey
+        
+        const journeyLocations = [
+            {
+                id: 1,
+                state: "Maine",
+                name: "Cadillac Mountain",
+                address: "Cadillac Mountain, Bar Harbor, ME 04609",
+                coordinates: [-68.2251, 44.3527],
+                driveTime: "0",
+                hikeTime: "0",
+                description: "First light in America - the journey begins at the highest point along the North Atlantic seaboard"
+            },
+            {
+                id: 2,
+                state: "New Hampshire",
+                name: "Mount Washington",
+                address: "Mt Washington, Sargent's Purchase, NH 03846",
+                coordinates: [-71.3032, 44.2706],
+                driveTime: "2h 46min",
+                hikeTime: "0",
+                description: "Above the clouds on the Northeast's highest peak"
+            },
+            {
+                id: 3,
+                state: "Vermont",
+                name: "Stowe Pinnacle",
+                address: "Stowe Pinnacle Trailhead, Stowe, VT 05672",
+                coordinates: [-72.7103, 44.4669],
+                driveTime: "2h 52min",
+                hikeTime: "1h",
+                description: "Vermont's Green Mountains painted in sunset colors"
+            },
+            {
+                id: 4,
+                state: "New York",
+                name: "Whiteface Mountain",
+                address: "Whiteface Mountain, Wilmington, NY 12997",
+                coordinates: [-73.9026, 44.3659],
+                driveTime: "2h 41min",
+                hikeTime: "5min",
+                description: "Adirondack wilderness and Olympic history"
+            },
+            {
+                id: 5,
+                state: "Massachusetts",
+                name: "Cape Cod",
+                address: "Province Lands Rd, Provincetown, MA 02657",
+                coordinates: [-70.1873, 42.0584],
+                driveTime: "7h",
+                hikeTime: "0",
+                description: "Atlantic Ocean sunset at the tip of Cape Cod"
+            },
+            {
+                id: 6,
+                state: "Rhode Island",
+                name: "Castle Hill Lighthouse",
+                address: "Castle Hill Ave, Newport, RI 02840",
+                coordinates: [-71.3626, 41.4623],
+                driveTime: "1h 30min",
+                hikeTime: "0",
+                description: "Ocean State's dramatic coastal cliffs and lighthouse views"
+            },
+            {
+                id: 7,
+                state: "Connecticut",
+                name: "East Rock Park",
+                address: "East Rock Park, New Haven, CT 06511",
+                coordinates: [-72.9050, 41.3271],
+                driveTime: "1h 45min",
+                hikeTime: "30min",
+                description: "Constitution State overlook with Long Island Sound views"
+            },
+            {
+                id: 8,
+                state: "New Jersey",
+                name: "Sandy Hook",
+                address: "Sandy Hook, NJ 07732",
+                coordinates: [-74.0020, 40.4700],
+                driveTime: "3h",
+                hikeTime: "0",
+                description: "Garden State's barrier beach sunset over Manhattan skyline"
+            },
+            {
+                id: 9,
+                state: "Pennsylvania",
+                name: "Mount Washington",
+                address: "Grandview Ave, Pittsburgh, PA 15211",
+                coordinates: [-80.0058, 40.4313],
+                driveTime: "4h 30min",
+                hikeTime: "0",
+                description: "Steel City overlook with three rivers convergence"
+            },
+            {
+                id: 10,
+                state: "Delaware",
+                name: "Cape Henlopen",
+                address: "Cape Henlopen State Park, Lewes, DE 19958",
+                coordinates: [-75.0877, 38.7745],
+                driveTime: "3h 15min",
+                hikeTime: "0",
+                description: "First State's Atlantic coastline and historic lighthouse"
+            },
+            {
+                id: 11,
+                state: "Maryland",
+                name: "Assateague Island",
+                address: "Assateague Island, MD 21811",
+                coordinates: [-75.1538, 38.0513],
+                driveTime: "2h 30min",
+                hikeTime: "0",
+                description: "Old Line State's wild ponies and pristine barrier island"
+            },
+            {
+                id: 12,
+                state: "Ohio",
+                name: "Vermilion Lighthouse",
+                address: "480 Main St, Vermilion, OH 44089",
+                coordinates: [-82.3657, 41.4217],
+                driveTime: "4h 30min",
+                hikeTime: "0",
+                description: "Great Lakes sunset with historic lighthouse silhouette"
+            },
+            {
+                id: 13,
+                state: "West Virginia",
+                name: "New River Gorge",
+                address: "New River Gorge Bridge, Fayetteville, WV 25840",
+                coordinates: [-81.0784, 38.0702],
+                driveTime: "3h 45min",
+                hikeTime: "1h",
+                description: "Mountain State's iconic bridge and whitewater canyon"
+            },
+            {
+                id: 14,
+                state: "Virginia",
+                name: "Shenandoah National Park",
+                address: "Skyline Drive, VA 22835",
+                coordinates: [-78.4353, 38.2928],
+                driveTime: "2h 45min",
+                hikeTime: "0",
+                description: "Old Dominion's Blue Ridge Mountains and Skyline Drive"
+            },
+            {
+                id: 15,
+                state: "Kentucky",
+                name: "Mammoth Cave",
+                address: "Mammoth Cave National Park, KY 42259",
+                coordinates: [-86.1000, 37.1862],
+                driveTime: "5h",
+                hikeTime: "0",
+                description: "Bluegrass State's world's longest cave system entrance"
+            },
+            {
+                id: 16,
+                state: "Tennessee",
+                name: "Great Smoky Mountains",
+                address: "Clingmans Dome, TN 37738",
+                coordinates: [-83.4984, 35.5627],
+                driveTime: "4h 15min",
+                hikeTime: "30min",
+                description: "Volunteer State's highest peak with endless mountain vistas"
+            },
+            {
+                id: 17,
+                state: "North Carolina",
+                name: "Cape Hatteras",
+                address: "Cape Hatteras Lighthouse, NC 27943",
+                coordinates: [-75.5241, 35.2506],
+                driveTime: "6h",
+                hikeTime: "0",
+                description: "Tar Heel State's iconic lighthouse and Atlantic graveyard"
+            },
+            {
+                id: 18,
+                state: "Illinois",
+                name: "Shawnee National Forest",
+                address: "Shawnee National Forest, Illinois",
+                coordinates: [-88.5403, 37.4477],
+                driveTime: "7h 30min",
+                hikeTime: "0",
+                description: "Southern Illinois rock formations frame the sunset"
+            },
+            {
+                id: 19,
+                state: "South Carolina",
+                name: "Hunting Island",
+                address: "Hunting Island State Park, SC 29920",
+                coordinates: [-80.4511, 32.3807],
+                driveTime: "3h 30min",
+                hikeTime: "0",
+                description: "Palmetto State's pristine beach and historic lighthouse"
+            },
+            {
+                id: 20,
+                state: "Georgia",
+                name: "Brasstown Bald",
+                address: "Brasstown Bald, GA 30512",
+                coordinates: [-83.8114, 34.8747],
+                driveTime: "4h",
+                hikeTime: "1h",
+                description: "Peach State's highest point with Appalachian views"
+            },
+            {
+                id: 21,
+                state: "Alabama",
+                name: "Gulf Shores",
+                address: "Gulf Shores, AL 36542",
+                coordinates: [-87.7008, 30.2460],
+                driveTime: "5h 30min",
+                hikeTime: "0",
+                description: "Heart of Dixie's sugar-white sand beaches on the Gulf"
+            },
+            {
+                id: 22,
+                state: "Mississippi",
+                name: "Natchez Trace",
+                address: "Natchez Trace Parkway, MS 39120",
+                coordinates: [-90.3853, 32.3182],
+                driveTime: "4h 45min",
+                hikeTime: "0",
+                description: "Magnolia State's historic parkway and river bluffs"
+            },
+            {
+                id: 23,
+                state: "Arkansas",
+                name: "Petit Jean State Park",
+                address: "Petit Jean State Park, AR 72851",
+                coordinates: [-92.9046, 35.1088],
+                driveTime: "6h",
+                hikeTime: "45min",
+                description: "Natural State's first state park and Cedar Falls"
+            },
+            {
+                id: 24,
+                state: "Missouri",
+                name: "Gateway Arch",
+                address: "Gateway Arch, St. Louis, MO 63102",
+                coordinates: [-90.1849, 38.6247],
+                driveTime: "5h 30min",
+                hikeTime: "0",
+                description: "Show-Me State's iconic arch and Mississippi River views"
+            },
+            {
+                id: 25,
+                state: "Oklahoma",
+                name: "Turner Falls",
+                address: "Turner Falls Park, OK 73086",
+                coordinates: [-97.1461, 34.4251],
+                driveTime: "4h 30min",
+                hikeTime: "15min",
+                description: "Sooner State's tallest waterfall in the Arbuckle Mountains"
+            },
+            {
+                id: 26,
+                state: "Florida",
+                name: "Panama City Beach",
+                address: "Panama City Beach, FL",
+                coordinates: [-85.8074, 30.1766],
+                driveTime: "7h 10min",
+                hikeTime: "0",
+                description: "Emerald Coast sunset over the Gulf of Mexico"
+            },
+            {
+                id: 27,
+                state: "Indiana",
+                name: "Indiana Dunes",
+                address: "Indiana Dunes National Park, IN 46304",
+                coordinates: [-87.0524, 41.6533],
+                driveTime: "4h",
+                hikeTime: "0",
+                description: "Hoosier State's Lake Michigan shoreline and towering dunes"
+            },
+            {
+                id: 28,
+                state: "Michigan",
+                name: "Sleeping Bear Dunes",
+                address: "Sleeping Bear Dunes, MI 49660",
+                coordinates: [-86.0581, 44.8834],
+                driveTime: "6h 30min",
+                hikeTime: "1h 30min",
+                description: "Great Lakes State's massive sand dunes and Lake Michigan"
+            },
+            {
+                id: 29,
+                state: "Louisiana",
+                name: "Caddo Lake",
+                address: "Caddo Lake, Louisiana",
+                coordinates: [-94.0084, 32.6725],
+                driveTime: "3h 30min",
+                hikeTime: "0",
+                description: "Mystical swampland cypress trees silhouetted at sunset"
+            },
+            {
+                id: 30,
+                state: "Wisconsin",
+                name: "Devil's Lake",
+                address: "Devil's Lake State Park, WI 53913",
+                coordinates: [-89.7318, 43.4130],
+                driveTime: "3h 45min",
+                hikeTime: "1h",
+                description: "Badger State's quartzite bluffs and pristine glacial lake"
+            },
+            {
+                id: 31,
+                state: "Minnesota",
+                name: "Split Rock Lighthouse",
+                address: "Split Rock Lighthouse, MN 55616",
+                coordinates: [-91.3671, 47.2002],
+                driveTime: "5h 30min",
+                hikeTime: "0",
+                description: "Land of 10,000 Lakes' iconic Lake Superior lighthouse"
+            },
+            {
+                id: 32,
+                state: "Iowa",
+                name: "Effigy Mounds",
+                address: "Effigy Mounds National Monument, IA 52045",
+                coordinates: [-91.0964, 43.0883],
+                driveTime: "4h 45min",
+                hikeTime: "45min",
+                description: "Hawkeye State's ancient Native American burial mounds"
+            },
+            {
+                id: 33,
+                state: "Kansas",
+                name: "Monument Rocks",
+                address: "Monument Rocks, KS 67665",
+                coordinates: [-100.7643, 38.7797],
+                driveTime: "8h 15min",
+                hikeTime: "0",
+                description: "Sunflower State's ancient chalk formations in endless prairie"
+            },
+            {
+                id: 34,
+                state: "Texas",
+                name: "Guadalupe Peak",
+                address: "Guadalupe Peak, TX 79847",
+                coordinates: [-104.8607, 31.8913],
+                driveTime: "10h",
+                hikeTime: "2h",
+                description: "Highest point in Texas with endless desert vistas"
+            },
+            {
+                id: 35,
+                state: "New Mexico",
+                name: "White Sands",
+                address: "White Sands National Park, NM",
+                coordinates: [-106.1711, 32.7872],
+                driveTime: "3h",
+                hikeTime: "0",
+                description: "Pristine white gypsum dunes create an otherworldly sunset"
+            },
+            {
+                id: 36,
+                state: "Arizona",
+                name: "Monument Valley",
+                address: "Monument Valley, AZ 84536",
+                coordinates: [-110.1735, 36.9869],
+                driveTime: "8h",
+                hikeTime: "0",
+                description: "Iconic red sandstone buttes define the American Southwest"
+            },
+            {
+                id: 37,
+                state: "Colorado",
+                name: "Last Dollar Road",
+                address: "Last Dollar Rd, Colorado",
+                coordinates: [-107.9132, 37.9578],
+                driveTime: "4h 20min",
+                hikeTime: "0",
+                description: "Fall aspens and snow-capped peaks in the Rockies"
+            },
+            {
+                id: 38,
+                state: "Utah",
+                name: "Delicate Arch",
+                address: "Arches National Park, UT 84532",
+                coordinates: [-109.4993, 38.7436],
+                driveTime: "5h 30min",
+                hikeTime: "1h 30min",
+                description: "Beehive State's most famous natural arch in red rock country"
+            },
+            {
+                id: 39,
+                state: "Wyoming",
+                name: "Grand Teton",
+                address: "Grand Teton National Park, WY 82190",
+                coordinates: [-110.8021, 43.7904],
+                driveTime: "9h",
+                hikeTime: "0",
+                description: "Majestic mountain reflections in pristine alpine lakes"
+            },
+            {
+                id: 40,
+                state: "Nebraska",
+                name: "Chimney Rock",
+                address: "Chimney Rock, NE 69341",
+                coordinates: [-103.3003, 41.7033],
+                driveTime: "6h 30min",
+                hikeTime: "0",
+                description: "Cornhusker State's iconic Oregon Trail landmark"
+            },
+            {
+                id: 41,
+                state: "South Dakota",
+                name: "Mount Rushmore",
+                address: "Mount Rushmore, SD 57751",
+                coordinates: [-103.4545, 43.8790],
+                driveTime: "7h 45min",
+                hikeTime: "0",
+                description: "Mount Rushmore State's presidential monument carved in granite"
+            },
+            {
+                id: 42,
+                state: "North Dakota",
+                name: "Theodore Roosevelt National Park",
+                address: "Theodore Roosevelt National Park, ND 58645",
+                coordinates: [-103.4387, 46.9788],
+                driveTime: "8h 30min",
+                hikeTime: "0",
+                description: "Peace Garden State's badlands and painted canyons"
+            },
+            {
+                id: 43,
+                state: "Montana",
+                name: "Wild Goose Island",
+                address: "Wild Goose Island, MT 59417",
+                coordinates: [-113.5360, 48.6966],
+                driveTime: "9h",
+                hikeTime: "0",
+                description: "Glacier National Park's most photographed location"
+            },
+            {
+                id: 44,
+                state: "Idaho",
+                name: "Sawtooth Mountains",
+                address: "Sawtooth National Recreation Area, ID 83340",
+                coordinates: [-115.0731, 43.7185],
+                driveTime: "10h",
+                hikeTime: "0",
+                description: "Gem State's jagged peaks and pristine alpine lakes"
+            },
+            {
+                id: 45,
+                state: "Nevada",
+                name: "Valley of Fire",
+                address: "Valley of Fire State Park, NV 89040",
+                coordinates: [-114.5144, 36.4534],
+                driveTime: "6h 45min",
+                hikeTime: "30min",
+                description: "Silver State's ancient red sandstone formations and petroglyphs"
+            },
+            {
+                id: 46,
+                state: "Oregon",
+                name: "Cannon Beach",
+                address: "Cannon Beach, OR",
+                coordinates: [-123.9615, 45.8917],
+                driveTime: "5h",
+                hikeTime: "0",
+                description: "Pacific Coast's iconic Haystack Rock at golden hour"
+            },
+            {
+                id: 47,
+                state: "Washington",
+                name: "Mount Rainier",
+                address: "Mount Rainier National Park, WA 98304",
+                coordinates: [-121.7604, 46.8523],
+                driveTime: "3h 15min",
+                hikeTime: "0",
+                description: "Evergreen State's iconic stratovolcano and wildflower meadows"
+            },
+            {
+                id: 48,
+                state: "California",
+                name: "Hawk Hill",
+                address: "Hawk Hill, CA 94941",
+                coordinates: [-122.4994, 37.8255],
+                driveTime: "4h 10min",
+                hikeTime: "0",
+                description: "Golden Gate Bridge wrapped in San Francisco fog"
+            },
+            {
+                id: 49,
+                state: "Alaska",
+                name: "Ten Mile Hill",
+                address: "Ten Mile Hill, Alaska",
+                coordinates: [-149.8940, 61.2181],
+                driveTime: "3h",
+                flightTime: "4h",
+                hikeTime: "15min",
+                description: "Last frontier wilderness with endless mountain views"
+            },
+            {
+                id: 50,
+                state: "Hawaii",
+                name: "Haleakala",
+                address: "Haleakala National Park, Maui, HI",
+                coordinates: [-156.1733, 20.7012],
+                driveTime: "1h",
+                flightTime: "8h",
+                hikeTime: "0",
+                description: "Above the clouds at the House of the Sun - journey's end"
+            }
+        ];
+
+        // Initialize Mapbox map
+        let map;
+        
+        function initializeMap() {
+            if (typeof mapboxgl === 'undefined') {
+                console.error('Mapbox GL JS not loaded');
+                return;
+            }
+            
+            mapboxgl.accessToken = 'pk.eyJ1IjoicGV0ZXJza290dGUiLCJhIjoiY21mdDc0eTBkMGNyejJqb2h0eXVhdHczZCJ9.aBg4DtEAbvrmaoAfh-EXhg';
+            
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/dark-v11',
+                center: [-98.5, 39.5],
+                zoom: 3.5
+            });
+            
+            map.addControl(new mapboxgl.NavigationControl());
+            
+            // Wait for map to be fully loaded and idle before adding markers
+            map.on('load', function() {
+                console.log('Map loaded, adding journey markers...');
+                
+                // Add a small delay to ensure map is fully rendered
+                setTimeout(() => {
+                    addJourneyMarkers();
+                    addJourneyRoute();
+                    
+                    // Verify markers are in correct positions
+                    console.log('Sample marker positions:');
+                    console.log('Maine:', journeyLocations[0].coordinates);
+                    console.log('California:', journeyLocations[47].coordinates);
+                    console.log('Texas:', journeyLocations[33].coordinates);
+                    
+                    setTimeout(() => {
+                        centerOnCurrentLocation();
+                    }, 500);
+                }, 100);
+            });
+            
+            // Add error handling
+            map.on('error', function(e) {
+                console.error('Map error:', e.error);
+            });
+        }
+
+        // Test function to add simple markers for debugging
+        function addTestMarkers() {
+            // Add a few test markers at known locations to verify positioning
+            const testLocations = [
+                { name: 'Los Angeles', coords: [-118.2437, 34.0522] },
+                { name: 'New York', coords: [-74.0060, 40.7128] },
+                { name: 'Chicago', coords: [-87.6298, 41.8781] },
+                { name: 'Miami', coords: [-80.1918, 25.7617] },
+                { name: 'Seattle', coords: [-122.3321, 47.6062] }
+            ];
+            
+            testLocations.forEach(loc => {
+                new mapboxgl.Marker({ color: '#FF0000' })
+                    .setLngLat(loc.coords)
+                    .addTo(map);
+                console.log(`Test marker added at ${loc.name}:`, loc.coords);
+            });
+        }
+        
+        function addJourneyMarkers() {
+            journeyLocations.forEach(location => {
+                let markerStatus = '';
+                let markerColor = '#666666';
+                
+                if (location.id < currentJourneyDay) {
+                    markerStatus = 'completed';
+                    markerColor = '#00F5FF';
+                } else if (location.id === currentJourneyDay) {
+                    markerStatus = 'current';
+                    markerColor = '#FFD700';
+                } else {
+                    markerStatus = 'future';
+                    markerColor = '#666666';
+                }
+                
+                // Toggle between default and custom markers for testing
+                const useDefaultMarker = true; // Set to true to test with default markers
+                
+                if (useDefaultMarker) {
+                    // Use default Mapbox markers to verify coordinates
+                    const marker = new mapboxgl.Marker({ 
+                        color: markerColor,
+                        scale: 0.7
+                    })
+                        .setLngLat(location.coordinates)
+                        .addTo(map);
+                    
+                    // Add popup to default marker
+                    const popupContent = `
+                        <div class="journey-popup">
+                            <h3>${location.state} - ${location.name}</h3>
+                            <p class="description">${location.description}</p>
+                        </div>
+                    `;
+                    
+                    const popup = new mapboxgl.Popup({ offset: 25 })
+                        .setHTML(popupContent);
+                    
+                    marker.setPopup(popup);
+                    
+                } else {
+                    // Custom marker implementation
+                    const markerEl = document.createElement('div');
+                    markerEl.className = `journey-marker ${markerStatus}`;
+
+                    // Set explicit dimensions with NO transforms to preserve coordinate accuracy
+                    markerEl.style.cssText = `
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 50%;
+                        background: ${markerStatus === 'completed' ? 'linear-gradient(135deg, #00F5FF, #00FF88)' :
+                                     markerStatus === 'current' ? 'linear-gradient(135deg, #FFD700, #FFA500)' :
+                                     'rgba(255, 255, 255, 0.1)'};
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: ${markerStatus === 'future' ? '#fff' : '#000'};
+                        font-size: 11px;
+                        font-weight: 600;
+                        margin: 0;
+                        padding: 0;
+                        border: none;
+                        position: relative;
+                    `;
+
+                    markerEl.textContent = location.id.toString();
+
+                    // Create marker with anchor: 'center' to ensure precise positioning
+                    const marker = new mapboxgl.Marker({
+                        element: markerEl,
+                        anchor: 'center'
+                    })
+                        .setLngLat(location.coordinates)
+                        .addTo(map);
+                    
+                    // Add popup
+                    const popupContent = `
+                        <div class="journey-popup">
+                            <h3>${location.state} - ${location.name}</h3>
+                            <p class="address">${location.address}</p>
+                            <p class="description">${location.description}</p>
+                            <div class="journey-stats">
+                                <span class="drive-time">🚗 ${location.driveTime}</span>
+                                ${location.hikeTime ? `<span class="hike-time">🥾 ${location.hikeTime}</span>` : ''}
+                                ${location.flightTime ? `<span class="flight-time">✈️ ${location.flightTime}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    
+                    const popup = new mapboxgl.Popup({ offset: 12 })
+                        .setHTML(popupContent);
+                    
+                    marker.setPopup(popup);
+                }
+            });
+            
+            console.log(`Added ${journeyLocations.length} markers to the map`);
+            
+            // Log a few specific locations to verify
+            console.log('Verifying key locations:');
+            console.log('Maine (1):', journeyLocations[0].coordinates);
+            console.log('Texas (34):', journeyLocations[33].coordinates);  
+            console.log('California (48):', journeyLocations[47].coordinates);
+            console.log('Hawaii (50):', journeyLocations[49].coordinates);
+        }
+
+        function addJourneyRoute() {
+            if (currentJourneyDay > 1) {
+                const completedCoordinates = journeyLocations
+                    .filter(location => location.id < currentJourneyDay)
+                    .map(location => location.coordinates);
+                
+                if (completedCoordinates.length > 1) {
+                    map.addSource('completed-route', {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: completedCoordinates
+                            }
+                        }
+                    });
+                    
+                    map.addLayer({
+                        id: 'completed-route-line',
+                        type: 'line',
+                        source: 'completed-route',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': '#00F5FF',
+                            'line-width': 4,
+                            'line-opacity': 0.8
+                        }
+                    });
+                }
+            }
+            
+            if (currentJourneyDay > 1 && currentJourneyDay <= journeyLocations.length) {
+                const prevLocation = journeyLocations[currentJourneyDay - 2];
+                const currentLocation = journeyLocations[currentJourneyDay - 1];
+                
+                map.addSource('current-route', {
+                    type: 'geojson',
+                    data: {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [prevLocation.coordinates, currentLocation.coordinates]
+                        }
+                    }
+                });
+                
+                map.addLayer({
+                    id: 'current-route-line',
+                    type: 'line',
+                    source: 'current-route',
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    paint: {
+                        'line-color': '#FFD700',
+                        'line-width': 5,
+                        'line-opacity': 0.9
+                    }
+                });
+            }
+            
+            if (currentJourneyDay < journeyLocations.length) {
+                const futureCoordinates = journeyLocations
+                    .filter(location => location.id >= currentJourneyDay)
+                    .map(location => location.coordinates);
+                
+                if (futureCoordinates.length > 1) {
+                    map.addSource('future-route', {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: futureCoordinates
+                            }
+                        }
+                    });
+                    
+                    map.addLayer({
+                        id: 'future-route-line',
+                        type: 'line',
+                        source: 'future-route',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': '#666666',
+                            'line-width': 2,
+                            'line-opacity': 0.5
+                        }
+                    });
+                }
+            }
+        }
+
+        function fitMapToJourney() {
+            if (!map) return;
+            const coordinates = journeyLocations.map(location => location.coordinates);
+            const bounds = coordinates.reduce(function (bounds, coord) {
+                return bounds.extend(coord);
+            }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+            
+            map.fitBounds(bounds, {
+                padding: 50
+            });
+        }
+
+        function centerOnCurrentLocation() {
+            if (!map || currentJourneyDay < 1 || currentJourneyDay > journeyLocations.length) return;
+            const currentLocation = journeyLocations[currentJourneyDay - 1];
+            map.flyTo({
+                center: currentLocation.coordinates,
+                zoom: 6,
+                duration: 2000
+            });
+        }
+
+        function updateJourneyProgress(newCurrentDay) {
+            if (newCurrentDay < 1 || newCurrentDay > journeyLocations.length) {
+                return;
+            }
+            
+            currentJourneyDay = newCurrentDay;
+            
+            const markers = document.querySelectorAll('.journey-marker');
+            markers.forEach(marker => marker.remove());
+            
+            if (map.getLayer('completed-route-line')) map.removeLayer('completed-route-line');
+            if (map.getLayer('current-route-line')) map.removeLayer('current-route-line');
+            if (map.getLayer('future-route-line')) map.removeLayer('future-route-line');
+            if (map.getSource('completed-route')) map.removeSource('completed-route');
+            if (map.getSource('current-route')) map.removeSource('current-route');
+            if (map.getSource('future-route')) map.removeSource('future-route');
+            
+            addJourneyMarkers();
+            addJourneyRoute();
+            centerOnCurrentLocation();
+        }
+
+        window.MegaAmericaMap = {
+            init: initializeMap,
+            fitToJourney: fitMapToJourney,
+            centerOnCurrent: centerOnCurrentLocation,
+            updateProgress: updateJourneyProgress,
+            locations: journeyLocations,
+            getCurrentDay: () => currentJourneyDay
+        };
+
+        // Destinations Scroller Functionality
+        let currentDestinationIndex = 0;
+        const destinationsPerView = 3;
+
+        function generateDestinationCards() {
+            const track = document.getElementById('destinations-track');
+            const gradients = [
+                'linear-gradient(135deg, #1a1a2e, #16213e)',
+                'linear-gradient(135deg, #0f3443, #34e89e)',
+                'linear-gradient(135deg, #373b44, #4286f4)',
+                'linear-gradient(135deg, #243949, #517fa4)',
+                'linear-gradient(135deg, #553d67, #f64f59)',
+                'linear-gradient(135deg, #4b134f, #c94b4b)',
+                'linear-gradient(135deg, #2c3e50, #3498db)',
+                'linear-gradient(135deg, #8e2de2, #4a00e0)',
+                'linear-gradient(135deg, #ff6b6b, #feca57)',
+                'linear-gradient(135deg, #48cae4, #023e8a)'
+            ];
+
+            journeyLocations.forEach((location, index) => {
+                const gradient = gradients[index % gradients.length];
+
+                const card = document.createElement('div');
+                card.className = 'destination-card';
+                card.innerHTML = `
+                    <div class="destination-bg" style="background: ${gradient};"></div>
+                    <div class="destination-number">${location.id.toString().padStart(2, '0')}</div>
+                    <div class="destination-content">
+                        <h3 class="destination-name">${location.name}</h3>
+                        <p class="destination-state">${location.state}</p>
+                        <p class="destination-description">${location.description}</p>
+                        <div class="destination-details">
+                            ${location.driveTime ? `<span class="travel-time">🚗 ${location.driveTime}</span>` : ''}
+                            ${location.hikeTime ? `<span class="travel-time">🥾 ${location.hikeTime}</span>` : ''}
+                            ${location.flightTime ? `<span class="travel-time">✈️ ${location.flightTime}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                track.appendChild(card);
+            });
+        }
+
+        function scrollDestinations(direction) {
+            const track = document.getElementById('destinations-track');
+            const cardWidth = 400 + 32; // card width + gap
+            const maxIndex = Math.max(0, journeyLocations.length - destinationsPerView);
+
+            currentDestinationIndex += direction;
+            currentDestinationIndex = Math.max(0, Math.min(currentDestinationIndex, maxIndex));
+
+            const translateX = -currentDestinationIndex * cardWidth;
+            track.style.transform = `translateX(${translateX}px)`;
+        }
+
+        // Initialize map when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            generateDestinationCards();
+            setTimeout(initializeMap, 1000);
+        });
+    </script>
+</body>
+</html>
