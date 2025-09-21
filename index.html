@@ -198,7 +198,7 @@
             gap: 2rem;
             transition: transform 0.5s ease;
             padding: 2rem 0;
-            justify-content: center;
+            justify-content: flex-start;
         }
 
         @media (max-width: 768px) {
@@ -1994,6 +1994,17 @@
             const track = document.getElementById('destinations-track');
             if (track) {
                 track.style.transform = 'translateX(0px)';
+                track.style.transition = 'none'; // Disable transition for immediate reset
+
+                // Force reflow and re-enable transition
+                setTimeout(() => {
+                    track.style.transition = 'transform 0.5s ease';
+                }, 50);
+
+                console.log('Destination gallery reset to position 1 (index 0)');
+                console.log('Track transform:', track.style.transform);
+            } else {
+                console.error('Destinations track not found during reset');
             }
         }
 
@@ -2037,20 +2048,35 @@
 
         function scrollDestinations(direction) {
             const track = document.getElementById('destinations-track');
-            if (!track) return;
+            if (!track) {
+                console.error('Track not found in scrollDestinations');
+                return;
+            }
 
             const isMobile = window.innerWidth <= 768;
             const cardWidth = isMobile ? 280 + 16 : 400 + 32; // mobile: 280px + 1rem gap, desktop: 400px + 2rem gap
             const cardsToShow = isMobile ? 1 : 3;
             const maxIndex = Math.max(0, journeyLocations.length - cardsToShow);
 
-            currentDestinationIndex += direction;
-            currentDestinationIndex = Math.max(0, Math.min(currentDestinationIndex, maxIndex));
+            console.log(`Before scroll: currentIndex=${currentDestinationIndex}, direction=${direction}, maxIndex=${maxIndex}`);
+
+            const newIndex = currentDestinationIndex + direction;
+            currentDestinationIndex = Math.max(0, Math.min(newIndex, maxIndex));
+
+            // Ensure we never go below 0 or above maxIndex
+            if (currentDestinationIndex < 0) {
+                currentDestinationIndex = 0;
+                console.log('Clamped to minimum index 0');
+            }
+            if (currentDestinationIndex > maxIndex) {
+                currentDestinationIndex = maxIndex;
+                console.log('Clamped to maximum index', maxIndex);
+            }
 
             const translateX = -currentDestinationIndex * cardWidth;
             track.style.transform = `translateX(${translateX}px)`;
 
-            console.log(`Scrolled to index: ${currentDestinationIndex}, translateX: ${translateX}px, showing destinations ${currentDestinationIndex + 1}-${Math.min(currentDestinationIndex + cardsToShow, journeyLocations.length)}`);
+            console.log(`After scroll: index=${currentDestinationIndex}, translateX=${translateX}px, showing destinations ${currentDestinationIndex + 1}-${Math.min(currentDestinationIndex + cardsToShow, journeyLocations.length)}`);
         }
 
         // Add touch support for mobile swiping
@@ -2093,20 +2119,45 @@
 
         // Initialize map when page loads
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Starting destination gallery initialization...');
+
             generateDestinationCards();
+
+            // Reset position multiple times to ensure it sticks
+            setTimeout(() => {
+                resetScrollPosition();
+                console.log('First reset completed');
+            }, 100);
+
+            setTimeout(() => {
+                resetScrollPosition();
+                console.log('Second reset completed');
+            }, 300);
+
             addTouchSupport();
-            resetScrollPosition(); // Ensure we start at position 1
 
             // Add event listeners to buttons as backup
             const prevBtn = document.querySelector('.scroll-btn.prev');
             const nextBtn = document.querySelector('.scroll-btn.next');
 
             if (prevBtn) {
-                prevBtn.addEventListener('click', () => scrollDestinations(-1));
+                prevBtn.addEventListener('click', () => {
+                    console.log('Previous button clicked');
+                    scrollDestinations(-1);
+                });
             }
             if (nextBtn) {
-                nextBtn.addEventListener('click', () => scrollDestinations(1));
+                nextBtn.addEventListener('click', () => {
+                    console.log('Next button clicked');
+                    scrollDestinations(1);
+                });
             }
+
+            // Final reset after everything is loaded
+            setTimeout(() => {
+                resetScrollPosition();
+                console.log('Final reset completed - should be showing destinations 1-3');
+            }, 500);
 
             setTimeout(initializeMap, 1000);
         });
