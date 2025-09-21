@@ -285,6 +285,7 @@
 
             .destination-content {
                 padding: 2rem 1.5rem;
+                transform: translateY(0) !important;
             }
 
             .destination-name {
@@ -338,13 +339,14 @@
             left: 0;
             right: 0;
             padding: 3rem 2rem;
-            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-            transform: translateY(100px);
+            background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.6));
+            transform: translateY(0);
             transition: transform 0.4s ease;
         }
 
         .destination-card:hover .destination-content {
-            transform: translateY(0);
+            transform: translateY(-10px);
+            background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.7));
         }
 
         .destination-number {
