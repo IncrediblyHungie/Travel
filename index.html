@@ -949,6 +949,7 @@
                 <div class="map-controls">
                     <button class="map-control-btn" onclick="MegaAmericaMap.fitToJourney()">View All</button>
                     <button class="map-control-btn" onclick="MegaAmericaMap.centerOnCurrent()">Current Location</button>
+                    <button class="map-control-btn" onclick="MegaAmericaMap.updateProgress(Math.max(1, MegaAmericaMap.getCurrentDay() - 1))">Previous Day</button>
                     <button class="map-control-btn" onclick="MegaAmericaMap.updateProgress((MegaAmericaMap.getCurrentDay() % 50) + 1)">Next Day</button>
                 </div>
             </div>
