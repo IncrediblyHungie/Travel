@@ -1684,6 +1684,10 @@
                 setTimeout(() => {
                     addJourneyMarkers();
 
+                    // Show initial straight-line routes immediately
+                    console.log(`Current journey day: ${currentJourneyDay}`);
+                    addSimpleRoute(); // Add this as immediate fallback
+
                     // Load real road routes (this will take a few seconds)
                     loadAllRoutes();
 
@@ -1836,6 +1840,51 @@
         let routesLoaded = 0;
         const totalRoutes = journeyLocations.length - 1;
 
+        // Simple straight-line route as immediate fallback
+        function addSimpleRoute() {
+            console.log('Adding simple straight-line routes as fallback...');
+
+            // Remove existing route layers
+            ['completed-route-line', 'current-route-line', 'future-route-line'].forEach(layerId => {
+                if (map.getLayer(layerId)) map.removeLayer(layerId);
+            });
+            ['completed-route', 'current-route', 'future-route'].forEach(sourceId => {
+                if (map.getSource(sourceId)) map.removeSource(sourceId);
+            });
+
+            // Always show the full journey route for now
+            const allCoordinates = journeyLocations.map(location => location.coordinates);
+
+            map.addSource('future-route', {
+                type: 'geojson',
+                data: {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: allCoordinates
+                    }
+                }
+            });
+
+            map.addLayer({
+                id: 'future-route-line',
+                type: 'line',
+                source: 'future-route',
+                layout: {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                paint: {
+                    'line-color': '#666666',
+                    'line-width': 3,
+                    'line-opacity': 0.7
+                }
+            });
+
+            console.log('Simple route added with', allCoordinates.length, 'coordinate points');
+        }
+
         async function getRouteGeometry(startCoords, endCoords, routeId) {
             // Check cache first
             if (routeCache[routeId]) {
@@ -1873,23 +1922,28 @@
                 const end = journeyLocations[i + 1];
                 const routeId = `${start.id}-${end.id}`;
 
-                await getRouteGeometry(start.coordinates, end.coordinates, routeId);
+                const geometry = await getRouteGeometry(start.coordinates, end.coordinates, routeId);
                 routesLoaded++;
 
-                // Update progress
+                console.log(`Route ${routeId}: ${geometry ? 'SUCCESS' : 'FAILED'} - ${routesLoaded}/${totalRoutes}`);
+
+                // Update map with road routes every 10 successful loads
                 if (routesLoaded % 10 === 0) {
-                    console.log(`Loaded ${routesLoaded}/${totalRoutes} routes...`);
+                    console.log(`Loaded ${routesLoaded}/${totalRoutes} routes, updating map with road routes...`);
+                    addJourneyRoute();
                 }
 
                 // Small delay to avoid rate limiting
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await new Promise(resolve => setTimeout(resolve, 150));
             }
 
-            console.log('All road routes loaded! Drawing journey path...');
+            console.log('All road routes loaded! Final map update with complete road network...');
             addJourneyRoute();
         }
 
         function addJourneyRoute() {
+            console.log('Drawing journey routes...');
+
             // Remove existing route layers
             ['completed-route-line', 'current-route-line', 'future-route-line'].forEach(layerId => {
                 if (map.getLayer(layerId)) map.removeLayer(layerId);
@@ -1898,23 +1952,31 @@
                 if (map.getSource(sourceId)) map.removeSource(sourceId);
             });
 
-            // Add completed routes (using cached road geometry)
+            // Helper function to get route coordinates (cached or fallback to straight line)
+            function getRouteCoordinates(startLocation, endLocation) {
+                const routeId = `${startLocation.id}-${endLocation.id}`;
+                if (routeCache[routeId] && routeCache[routeId].coordinates) {
+                    return routeCache[routeId].coordinates;
+                }
+                // Fallback to straight line
+                return [startLocation.coordinates, endLocation.coordinates];
+            }
+
+            // Add completed routes
             if (currentJourneyDay > 1) {
-                const completedRoutes = [];
+                let allCompletedCoordinates = [];
 
                 for (let i = 0; i < currentJourneyDay - 1; i++) {
                     const start = journeyLocations[i];
                     const end = journeyLocations[i + 1];
-                    const routeId = `${start.id}-${end.id}`;
+                    const routeCoords = getRouteCoordinates(start, end);
 
-                    if (routeCache[routeId]) {
-                        completedRoutes.push(routeCache[routeId].coordinates);
-                    }
+                    // Add all coordinates from this route segment
+                    allCompletedCoordinates = allCompletedCoordinates.concat(routeCoords);
                 }
 
-                if (completedRoutes.length > 0) {
-                    // Flatten all route coordinates into one continuous line
-                    const allCoordinates = completedRoutes.flat();
+                if (allCompletedCoordinates.length > 0) {
+                    console.log(`Adding completed route with ${allCompletedCoordinates.length} coordinates`);
 
                     map.addSource('completed-route', {
                         type: 'geojson',
@@ -1923,7 +1985,7 @@
                             properties: {},
                             geometry: {
                                 type: 'LineString',
-                                coordinates: allCoordinates
+                                coordinates: allCompletedCoordinates
                             }
                         }
                     });
@@ -1945,55 +2007,57 @@
                 }
             }
 
-            // Add current route segment
+            // Add current route segment (if not at first location)
             if (currentJourneyDay > 1 && currentJourneyDay <= journeyLocations.length) {
                 const prevLocation = journeyLocations[currentJourneyDay - 2];
                 const currentLocation = journeyLocations[currentJourneyDay - 1];
-                const routeId = `${prevLocation.id}-${currentLocation.id}`;
+                const currentRouteCoords = getRouteCoordinates(prevLocation, currentLocation);
 
-                if (routeCache[routeId]) {
-                    map.addSource('current-route', {
-                        type: 'geojson',
-                        data: {
-                            type: 'Feature',
-                            properties: {},
-                            geometry: routeCache[routeId]
-                        }
-                    });
+                console.log(`Adding current route with ${currentRouteCoords.length} coordinates`);
 
-                    map.addLayer({
-                        id: 'current-route-line',
-                        type: 'line',
-                        source: 'current-route',
-                        layout: {
-                            'line-join': 'round',
-                            'line-cap': 'round'
-                        },
-                        paint: {
-                            'line-color': '#FFD700',
-                            'line-width': 5,
-                            'line-opacity': 0.9
+                map.addSource('current-route', {
+                    type: 'geojson',
+                    data: {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: currentRouteCoords
                         }
-                    });
-                }
+                    }
+                });
+
+                map.addLayer({
+                    id: 'current-route-line',
+                    type: 'line',
+                    source: 'current-route',
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    paint: {
+                        'line-color': '#FFD700',
+                        'line-width': 5,
+                        'line-opacity': 0.9
+                    }
+                });
             }
 
             // Add future routes
             if (currentJourneyDay < journeyLocations.length) {
-                const futureRoutes = [];
+                let allFutureCoordinates = [];
 
                 for (let i = currentJourneyDay - 1; i < journeyLocations.length - 1; i++) {
                     const start = journeyLocations[i];
                     const end = journeyLocations[i + 1];
-                    const routeId = `${start.id}-${end.id}`;
+                    const routeCoords = getRouteCoordinates(start, end);
 
-                    if (routeCache[routeId]) {
-                        futureRoutes.push(routeCache[routeId].coordinates);
-                    }
+                    // Add all coordinates from this route segment
+                    allFutureCoordinates = allFutureCoordinates.concat(routeCoords);
                 }
 
-                if (futureRoutes.length > 0) {
-                    const allFutureCoordinates = futureRoutes.flat();
+                if (allFutureCoordinates.length > 0) {
+                    console.log(`Adding future route with ${allFutureCoordinates.length} coordinates`);
 
                     map.addSource('future-route', {
                         type: 'geojson',
@@ -2023,6 +2087,8 @@
                     });
                 }
             }
+
+            console.log('Journey routes drawing completed');
         }
 
         function fitMapToJourney() {
