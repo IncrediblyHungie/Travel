@@ -715,6 +715,17 @@
                 border-radius: 20px;
             }
 
+            /* Mobile map controls */
+            .map-controls {
+                bottom: 15px;
+                gap: 5px;
+            }
+
+            .map-control-btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
             /* Mobile gallery header */
             .gallery-header {
                 padding: 0 1rem;
@@ -892,6 +903,8 @@
             display: flex;
             gap: 10px;
             z-index: 10;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .map-control-btn {
@@ -965,7 +978,8 @@
                 <div class="map-controls">
                     <button class="map-control-btn" onclick="MegaAmericaMap.fitToJourney()">View All</button>
                     <button class="map-control-btn" onclick="MegaAmericaMap.centerOnCurrent()">Current Location</button>
-                    <button class="map-control-btn" onclick="MegaAmericaMap.updateProgress((MegaAmericaMap.getCurrentDay() % 50) + 1)">Next Day</button>
+                    <button class="map-control-btn" onclick="MegaAmericaMap.previousDay()">Previous Day</button>
+                    <button class="map-control-btn" onclick="MegaAmericaMap.nextDay()">Next Day</button>
                 </div>
             </div>
         </div>
@@ -2135,11 +2149,25 @@
             centerOnCurrentLocation();
         }
 
+        function nextDay() {
+            const newDay = currentJourneyDay < journeyLocations.length ? currentJourneyDay + 1 : 1;
+            console.log(`Moving to next day: ${newDay}`);
+            updateJourneyProgress(newDay);
+        }
+
+        function previousDay() {
+            const newDay = currentJourneyDay > 1 ? currentJourneyDay - 1 : journeyLocations.length;
+            console.log(`Moving to previous day: ${newDay}`);
+            updateJourneyProgress(newDay);
+        }
+
         window.MegaAmericaMap = {
             init: initializeMap,
             fitToJourney: fitMapToJourney,
             centerOnCurrent: centerOnCurrentLocation,
             updateProgress: updateJourneyProgress,
+            nextDay: nextDay,
+            previousDay: previousDay,
             locations: journeyLocations,
             getCurrentDay: () => currentJourneyDay
         };
