@@ -1679,18 +1679,20 @@
             // Wait for map to be fully loaded and idle before adding markers
             map.on('load', function() {
                 console.log('Map loaded, adding journey markers...');
-                
+
                 // Add a small delay to ensure map is fully rendered
                 setTimeout(() => {
                     addJourneyMarkers();
-                    addJourneyRoute();
-                    
+
+                    // Load real road routes (this will take a few seconds)
+                    loadAllRoutes();
+
                     // Verify markers are in correct positions
                     console.log('Sample marker positions:');
                     console.log('Maine:', journeyLocations[0].coordinates);
                     console.log('California:', journeyLocations[47].coordinates);
                     console.log('Texas:', journeyLocations[33].coordinates);
-                    
+
                     setTimeout(() => {
                         centerOnCurrentLocation();
                     }, 500);
@@ -1829,13 +1831,91 @@
             console.log('Hawaii (50):', journeyLocations[49].coordinates);
         }
 
+        // Store route geometries for better performance
+        let routeCache = {};
+        let routesLoaded = 0;
+        const totalRoutes = journeyLocations.length - 1;
+
+        async function getRouteGeometry(startCoords, endCoords, routeId) {
+            // Check cache first
+            if (routeCache[routeId]) {
+                return routeCache[routeId];
+            }
+
+            try {
+                const query = await fetch(
+                    `https://api.mapbox.com/directions/v5/mapbox/driving/${startCoords[0]},${startCoords[1]};${endCoords[0]},${endCoords[1]}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`,
+                    { method: 'GET' }
+                );
+                const json = await query.json();
+
+                if (json.routes && json.routes[0]) {
+                    const geometry = json.routes[0].geometry;
+                    routeCache[routeId] = geometry;
+                    return geometry;
+                }
+            } catch (error) {
+                console.log(`Route API failed for ${routeId}, using straight line`);
+            }
+
+            // Fallback to straight line if API fails
+            return {
+                type: 'LineString',
+                coordinates: [startCoords, endCoords]
+            };
+        }
+
+        async function loadAllRoutes() {
+            console.log('Loading road routes for all destinations...');
+
+            for (let i = 0; i < journeyLocations.length - 1; i++) {
+                const start = journeyLocations[i];
+                const end = journeyLocations[i + 1];
+                const routeId = `${start.id}-${end.id}`;
+
+                await getRouteGeometry(start.coordinates, end.coordinates, routeId);
+                routesLoaded++;
+
+                // Update progress
+                if (routesLoaded % 10 === 0) {
+                    console.log(`Loaded ${routesLoaded}/${totalRoutes} routes...`);
+                }
+
+                // Small delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            console.log('All road routes loaded! Drawing journey path...');
+            addJourneyRoute();
+        }
+
         function addJourneyRoute() {
+            // Remove existing route layers
+            ['completed-route-line', 'current-route-line', 'future-route-line'].forEach(layerId => {
+                if (map.getLayer(layerId)) map.removeLayer(layerId);
+            });
+            ['completed-route', 'current-route', 'future-route'].forEach(sourceId => {
+                if (map.getSource(sourceId)) map.removeSource(sourceId);
+            });
+
+            // Add completed routes (using cached road geometry)
             if (currentJourneyDay > 1) {
-                const completedCoordinates = journeyLocations
-                    .filter(location => location.id < currentJourneyDay)
-                    .map(location => location.coordinates);
-                
-                if (completedCoordinates.length > 1) {
+                const completedRoutes = [];
+
+                for (let i = 0; i < currentJourneyDay - 1; i++) {
+                    const start = journeyLocations[i];
+                    const end = journeyLocations[i + 1];
+                    const routeId = `${start.id}-${end.id}`;
+
+                    if (routeCache[routeId]) {
+                        completedRoutes.push(routeCache[routeId].coordinates);
+                    }
+                }
+
+                if (completedRoutes.length > 0) {
+                    // Flatten all route coordinates into one continuous line
+                    const allCoordinates = completedRoutes.flat();
+
                     map.addSource('completed-route', {
                         type: 'geojson',
                         data: {
@@ -1843,11 +1923,11 @@
                             properties: {},
                             geometry: {
                                 type: 'LineString',
-                                coordinates: completedCoordinates
+                                coordinates: allCoordinates
                             }
                         }
                     });
-                    
+
                     map.addLayer({
                         id: 'completed-route-line',
                         type: 'line',
@@ -1864,45 +1944,57 @@
                     });
                 }
             }
-            
+
+            // Add current route segment
             if (currentJourneyDay > 1 && currentJourneyDay <= journeyLocations.length) {
                 const prevLocation = journeyLocations[currentJourneyDay - 2];
                 const currentLocation = journeyLocations[currentJourneyDay - 1];
-                
-                map.addSource('current-route', {
-                    type: 'geojson',
-                    data: {
-                        type: 'Feature',
-                        properties: {},
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: [prevLocation.coordinates, currentLocation.coordinates]
+                const routeId = `${prevLocation.id}-${currentLocation.id}`;
+
+                if (routeCache[routeId]) {
+                    map.addSource('current-route', {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: routeCache[routeId]
                         }
-                    }
-                });
-                
-                map.addLayer({
-                    id: 'current-route-line',
-                    type: 'line',
-                    source: 'current-route',
-                    layout: {
-                        'line-join': 'round',
-                        'line-cap': 'round'
-                    },
-                    paint: {
-                        'line-color': '#FFD700',
-                        'line-width': 5,
-                        'line-opacity': 0.9
-                    }
-                });
+                    });
+
+                    map.addLayer({
+                        id: 'current-route-line',
+                        type: 'line',
+                        source: 'current-route',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': '#FFD700',
+                            'line-width': 5,
+                            'line-opacity': 0.9
+                        }
+                    });
+                }
             }
-            
+
+            // Add future routes
             if (currentJourneyDay < journeyLocations.length) {
-                const futureCoordinates = journeyLocations
-                    .filter(location => location.id >= currentJourneyDay)
-                    .map(location => location.coordinates);
-                
-                if (futureCoordinates.length > 1) {
+                const futureRoutes = [];
+
+                for (let i = currentJourneyDay - 1; i < journeyLocations.length - 1; i++) {
+                    const start = journeyLocations[i];
+                    const end = journeyLocations[i + 1];
+                    const routeId = `${start.id}-${end.id}`;
+
+                    if (routeCache[routeId]) {
+                        futureRoutes.push(routeCache[routeId].coordinates);
+                    }
+                }
+
+                if (futureRoutes.length > 0) {
+                    const allFutureCoordinates = futureRoutes.flat();
+
                     map.addSource('future-route', {
                         type: 'geojson',
                         data: {
@@ -1910,11 +2002,11 @@
                             properties: {},
                             geometry: {
                                 type: 'LineString',
-                                coordinates: futureCoordinates
+                                coordinates: allFutureCoordinates
                             }
                         }
                     });
-                    
+
                     map.addLayer({
                         id: 'future-route-line',
                         type: 'line',
@@ -1959,21 +2051,21 @@
             if (newCurrentDay < 1 || newCurrentDay > journeyLocations.length) {
                 return;
             }
-            
+
             currentJourneyDay = newCurrentDay;
-            
+
             const markers = document.querySelectorAll('.journey-marker');
             markers.forEach(marker => marker.remove());
-            
+
             if (map.getLayer('completed-route-line')) map.removeLayer('completed-route-line');
             if (map.getLayer('current-route-line')) map.removeLayer('current-route-line');
             if (map.getLayer('future-route-line')) map.removeLayer('future-route-line');
             if (map.getSource('completed-route')) map.removeSource('completed-route');
             if (map.getSource('current-route')) map.removeSource('current-route');
             if (map.getSource('future-route')) map.removeSource('future-route');
-            
+
             addJourneyMarkers();
-            addJourneyRoute();
+            addJourneyRoute(); // This will now use cached road routes
             centerOnCurrentLocation();
         }
 
