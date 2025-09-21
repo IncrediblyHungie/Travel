@@ -27,20 +27,7 @@
             background: #000;
             color: #fff;
             overflow-x: hidden;
-            cursor: default;
-        }
-
-        /* Custom Cursor */
-        .cursor {
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--aurora-1);
-            border-radius: 50%;
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            transition: all 0.1s ease;
-            mix-blend-mode: difference;
+            cursor: none;
         }
 
         /* Hero Section */
@@ -915,8 +902,6 @@
     </style>
 </head>
 <body>
-    <!-- Custom Cursor -->
-    <div class="cursor"></div>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -1050,44 +1035,6 @@
     </section>
 
     <script>
-        // Custom Cursor
-        const cursor = document.querySelector('.cursor');
-        let mouseX = 0;
-        let mouseY = 0;
-        let cursorX = 0;
-        let cursorY = 0;
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
-        function animateCursor() {
-            const dx = mouseX - cursorX;
-            const dy = mouseY - cursorY;
-            
-            cursorX += dx * 0.1;
-            cursorY += dy * 0.1;
-            
-            cursor.style.left = cursorX + 'px';
-            cursor.style.top = cursorY + 'px';
-            
-            requestAnimationFrame(animateCursor);
-        }
-        animateCursor();
-
-        // Cursor hover effect
-        const hoverElements = document.querySelectorAll('a, .nav-card, .destination-card, .exp-card, .cta-button');
-        hoverElements.forEach(element => {
-            element.addEventListener('mouseenter', () => {
-                cursor.style.transform = 'scale(2)';
-                cursor.style.borderColor = 'var(--aurora-2)';
-            });
-            element.addEventListener('mouseleave', () => {
-                cursor.style.transform = 'scale(1)';
-                cursor.style.borderColor = 'var(--aurora-1)';
-            });
-        });
 
         // Generate Particles
         const particlesContainer = document.getElementById('particles');
