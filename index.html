@@ -1782,10 +1782,27 @@
                         </div>
                     `;
                     
-                    const popup = new mapboxgl.Popup({ offset: 25 })
-                        .setHTML(popupContent);
-                    
+                    const popup = new mapboxgl.Popup({
+                        offset: 25,
+                        closeButton: false,
+                        closeOnClick: false
+                    }).setHTML(popupContent);
+
                     marker.setPopup(popup);
+
+                    // Add hover functionality
+                    marker.getElement().addEventListener('mouseenter', () => {
+                        popup.addTo(map);
+                    });
+
+                    marker.getElement().addEventListener('mouseleave', () => {
+                        popup.remove();
+                    });
+
+                    // Keep click functionality
+                    marker.getElement().addEventListener('click', () => {
+                        popup.addTo(map);
+                    });
                     
                 } else {
                     // Custom marker implementation
