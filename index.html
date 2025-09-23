@@ -1853,10 +1853,27 @@
                         </div>
                     `;
                     
-                    const popup = new mapboxgl.Popup({ offset: 12 })
-                        .setHTML(popupContent);
-                    
+                    const popup = new mapboxgl.Popup({
+                        offset: 12,
+                        closeButton: false,
+                        closeOnClick: false
+                    }).setHTML(popupContent);
+
                     marker.setPopup(popup);
+
+                    // Add hover functionality to custom markers
+                    markerEl.addEventListener('mouseenter', () => {
+                        popup.addTo(map);
+                    });
+
+                    markerEl.addEventListener('mouseleave', () => {
+                        popup.remove();
+                    });
+
+                    // Keep click functionality for custom markers
+                    markerEl.addEventListener('click', () => {
+                        popup.addTo(map);
+                    });
                 }
             });
             
