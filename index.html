@@ -1692,7 +1692,36 @@
             
             // Wait for map to be fully loaded and idle before adding markers
             map.on('load', function() {
-                console.log('Map loaded, adding journey markers...');
+                console.log('Map loaded, customizing colors and adding journey markers...');
+
+                // Customize map colors to match sunset theme
+                setTimeout(() => {
+                    // Override water color to match coral theme
+                    map.setPaintProperty('water', 'fill-color', '#FFE0CC');
+
+                    // Override land/background color to warm cream
+                    map.setPaintProperty('background', 'background-color', '#FFF8F5');
+
+                    // Try to soften forest colors if layers exist
+                    const layers = map.getStyle().layers;
+                    layers.forEach(layer => {
+                        if (layer.id.includes('forest') || layer.id.includes('park')) {
+                            try {
+                                map.setPaintProperty(layer.id, 'fill-color', '#E8F5E8');
+                            } catch (e) {
+                                // Layer might not support this property
+                            }
+                        }
+                        // Soften road colors
+                        if (layer.id.includes('road') && layer.paint && layer.paint['line-color']) {
+                            try {
+                                map.setPaintProperty(layer.id, 'line-color', '#D4AF8C');
+                            } catch (e) {
+                                // Layer might not support this property
+                            }
+                        }
+                    });
+                }, 500);
 
                 // Add a small delay to ensure map is fully rendered
                 setTimeout(() => {
