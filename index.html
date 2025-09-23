@@ -76,13 +76,17 @@
             background: linear-gradient(45deg, var(--sunset-orange), var(--sunset-pink), var(--sunset-purple));
             filter: blur(100px);
             opacity: 0.2;
-            animation: aurora 20s ease-in-out infinite;
+            animation: aurora 15s ease-in-out infinite;
         }
 
         @keyframes aurora {
-            0%, 100% { transform: rotate(0deg) scale(1); }
-            33% { transform: rotate(120deg) scale(1.2); }
-            66% { transform: rotate(240deg) scale(0.8); }
+            0% { transform: translate(-20%, -10%) rotate(0deg) scale(1); }
+            16% { transform: translate(10%, -20%) rotate(60deg) scale(1.3); }
+            33% { transform: translate(25%, 5%) rotate(120deg) scale(0.9); }
+            50% { transform: translate(-5%, 20%) rotate(180deg) scale(1.4); }
+            66% { transform: translate(-25%, -5%) rotate(240deg) scale(0.7); }
+            83% { transform: translate(15%, -15%) rotate(300deg) scale(1.1); }
+            100% { transform: translate(-20%, -10%) rotate(360deg) scale(1); }
         }
 
         /* Title Animation */
@@ -91,7 +95,7 @@
             font-weight: 100;
             letter-spacing: clamp(0.1em, 2vw, 0.5em);
             text-transform: uppercase;
-            background: linear-gradient(90deg, var(--forest-green), var(--sunset-orange), var(--sunset-pink));
+            background: linear-gradient(90deg, var(--sunset-purple), var(--sunset-orange), var(--sunset-pink));
             background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
