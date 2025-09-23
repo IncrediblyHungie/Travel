@@ -1782,27 +1782,45 @@
                         </div>
                     `;
                     
+                    // Detect if device supports touch
+                    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
                     const popup = new mapboxgl.Popup({
                         offset: 25,
                         closeButton: false,
-                        closeOnClick: false
+                        closeOnClick: isTouchDevice // Allow close on click for mobile, prevent for desktop hover
                     }).setHTML(popupContent);
 
                     marker.setPopup(popup);
 
-                    // Add hover functionality
-                    marker.getElement().addEventListener('mouseenter', () => {
-                        popup.addTo(map);
-                    });
+                    const markerElement = marker.getElement();
 
-                    marker.getElement().addEventListener('mouseleave', () => {
-                        popup.remove();
-                    });
+                    if (isTouchDevice) {
+                        // Mobile/Touch device - use touch events
+                        markerElement.addEventListener('touchstart', (e) => {
+                            e.preventDefault(); // Prevent default touch behavior
+                            popup.addTo(map);
+                        });
 
-                    // Keep click functionality
-                    marker.getElement().addEventListener('click', () => {
-                        popup.addTo(map);
-                    });
+                        // Also support click as fallback
+                        markerElement.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            popup.addTo(map);
+                        });
+                    } else {
+                        // Desktop - use hover + click
+                        markerElement.addEventListener('mouseenter', () => {
+                            popup.addTo(map);
+                        });
+
+                        markerElement.addEventListener('mouseleave', () => {
+                            popup.remove();
+                        });
+
+                        markerElement.addEventListener('click', () => {
+                            popup.addTo(map);
+                        });
+                    }
                     
                 } else {
                     // Custom marker implementation
@@ -1853,27 +1871,43 @@
                         </div>
                     `;
                     
+                    // Detect if device supports touch
+                    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
                     const popup = new mapboxgl.Popup({
                         offset: 12,
                         closeButton: false,
-                        closeOnClick: false
+                        closeOnClick: isTouchDevice // Allow close on click for mobile, prevent for desktop hover
                     }).setHTML(popupContent);
 
                     marker.setPopup(popup);
 
-                    // Add hover functionality to custom markers
-                    markerEl.addEventListener('mouseenter', () => {
-                        popup.addTo(map);
-                    });
+                    if (isTouchDevice) {
+                        // Mobile/Touch device - use touch events for custom markers
+                        markerEl.addEventListener('touchstart', (e) => {
+                            e.preventDefault(); // Prevent default touch behavior
+                            popup.addTo(map);
+                        });
 
-                    markerEl.addEventListener('mouseleave', () => {
-                        popup.remove();
-                    });
+                        // Also support click as fallback for custom markers
+                        markerEl.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            popup.addTo(map);
+                        });
+                    } else {
+                        // Desktop - use hover + click for custom markers
+                        markerEl.addEventListener('mouseenter', () => {
+                            popup.addTo(map);
+                        });
 
-                    // Keep click functionality for custom markers
-                    markerEl.addEventListener('click', () => {
-                        popup.addTo(map);
-                    });
+                        markerEl.addEventListener('mouseleave', () => {
+                            popup.remove();
+                        });
+
+                        markerEl.addEventListener('click', () => {
+                            popup.addTo(map);
+                        });
+                    }
                 }
             });
             
