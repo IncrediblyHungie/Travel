@@ -1746,6 +1746,9 @@
             });
         }
         
+        // Track currently open popup for mobile single-popup behavior
+        let currentMobilePopup = null;
+
         function addJourneyMarkers() {
             journeyLocations.forEach(location => {
                 let markerStatus = '';
@@ -1799,13 +1802,27 @@
                         // Mobile/Touch device - use touch events
                         markerElement.addEventListener('touchstart', (e) => {
                             e.preventDefault(); // Prevent default touch behavior
+
+                            // Close any existing popup before opening new one
+                            if (currentMobilePopup && currentMobilePopup !== popup) {
+                                currentMobilePopup.remove();
+                            }
+
                             popup.addTo(map);
+                            currentMobilePopup = popup;
                         });
 
                         // Also support click as fallback
                         markerElement.addEventListener('click', (e) => {
                             e.stopPropagation();
+
+                            // Close any existing popup before opening new one
+                            if (currentMobilePopup && currentMobilePopup !== popup) {
+                                currentMobilePopup.remove();
+                            }
+
                             popup.addTo(map);
+                            currentMobilePopup = popup;
                         });
                     } else {
                         // Desktop - use hover + click
@@ -1886,13 +1903,27 @@
                         // Mobile/Touch device - use touch events for custom markers
                         markerEl.addEventListener('touchstart', (e) => {
                             e.preventDefault(); // Prevent default touch behavior
+
+                            // Close any existing popup before opening new one
+                            if (currentMobilePopup && currentMobilePopup !== popup) {
+                                currentMobilePopup.remove();
+                            }
+
                             popup.addTo(map);
+                            currentMobilePopup = popup;
                         });
 
                         // Also support click as fallback for custom markers
                         markerEl.addEventListener('click', (e) => {
                             e.stopPropagation();
+
+                            // Close any existing popup before opening new one
+                            if (currentMobilePopup && currentMobilePopup !== popup) {
+                                currentMobilePopup.remove();
+                            }
+
                             popup.addTo(map);
+                            currentMobilePopup = popup;
                         });
                     } else {
                         // Desktop - use hover + click for custom markers
@@ -2205,6 +2236,12 @@
             }
 
             currentJourneyDay = newCurrentDay;
+
+            // Clear any mobile popup reference when navigating
+            if (currentMobilePopup) {
+                currentMobilePopup.remove();
+                currentMobilePopup = null;
+            }
 
             const markers = document.querySelectorAll('.journey-marker');
             markers.forEach(marker => marker.remove());
