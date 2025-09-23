@@ -1750,7 +1750,7 @@
                 
                 if (location.id < currentJourneyDay) {
                     markerStatus = 'completed';
-                    markerColor = '#00F5FF';
+                    markerColor = '#8E24AA';
                 } else if (location.id === currentJourneyDay) {
                     markerStatus = 'current';
                     markerColor = '#FFD700';
@@ -1794,7 +1794,7 @@
                         width: 24px;
                         height: 24px;
                         border-radius: 50%;
-                        background: ${markerStatus === 'completed' ? 'linear-gradient(135deg, #00F5FF, #00FF88)' :
+                        background: ${markerStatus === 'completed' ? 'linear-gradient(135deg, #8E24AA, #C084FC)' :
                                      markerStatus === 'current' ? 'linear-gradient(135deg, #FFD700, #FFA500)' :
                                      'rgba(255, 255, 255, 0.1)'};
                         display: flex;
