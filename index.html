@@ -292,7 +292,7 @@
             margin-bottom: 1rem;
         }
 
-        /* Native CSS Scroll-Snap Carousel - Ultra Performance */
+        /* Hybrid Approach: CSS Scroll-Snap + JavaScript enhancement */
         .destinations-scroller {
             position: relative;
             max-width: 1400px;
@@ -303,10 +303,23 @@
             -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
             scroll-behavior: smooth;
 
-            /* CSS Scroll Snap - Native browser momentum */
+            /* Enhanced CSS Scroll Snap for better mobile momentum */
             scroll-snap-type: x mandatory;
+            scroll-snap-stop: normal; /* Allow momentum to skip snaps */
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE/Edge */
+
+            /* Ensure proper stacking context for controls */
+            z-index: 1;
+        }
+
+        /* Mobile enhancement for better momentum feel */
+        @media (max-width: 768px) {
+            .destinations-scroller {
+                /* More permissive snapping for better throw feel */
+                scroll-snap-type: x proximity; /* Less strict snapping */
+                overscroll-behavior-x: contain; /* Prevent page scroll interference */
+            }
         }
 
         /* Hide scrollbars */
@@ -355,8 +368,14 @@
             display: flex;
             justify-content: space-between;
             pointer-events: none;
-            z-index: 10;
+            z-index: 20; /* Higher than scroller */
             padding: 0 1rem;
+            transform: translateY(-50%); /* Proper vertical centering */
+
+            /* Ensure controls don't move with scroll content */
+            width: 100%;
+            max-width: 1400px; /* Match scroller max-width */
+            margin: 0 auto;
         }
 
         .scroll-btn {
@@ -444,10 +463,9 @@
                 scroll-snap-align: start; /* Start alignment works better on mobile */
             }
 
-            /* Mobile-specific scroll behavior */
+            /* Enhanced scroll padding for mobile */
             .destinations-scroller {
                 scroll-padding-left: 0.5rem; /* Account for mobile padding */
-                scroll-snap-type: x mandatory; /* Ensure snap behavior on mobile */
             }
 
             .destination-number {
@@ -3794,10 +3812,62 @@
             }
         }
 
-        // DISABLED: Custom JavaScript carousel - replaced with native CSS scroll-snap
-        // const carousel = new OptimizedCarousel();
+        // Hybrid Carousel: CSS Scroll-Snap + Desktop Mouse Drag Enhancement
+        class HybridCarousel {
+            constructor() {
+                this.scroller = document.querySelector('.destinations-scroller');
+                this.isMobile = window.innerWidth <= 768;
+                this.isDragging = false;
+                this.startX = 0;
+                this.scrollLeft = 0;
 
-        // Native CSS Scroll-Snap navigation functions
+                if (!this.scroller) return;
+
+                // Only add mouse drag for desktop - mobile uses native CSS scroll-snap
+                if (!this.isMobile) {
+                    this.addMouseDragSupport();
+                }
+            }
+
+            addMouseDragSupport() {
+                this.scroller.addEventListener('mousedown', (e) => {
+                    this.isDragging = true;
+                    this.startX = e.pageX - this.scroller.offsetLeft;
+                    this.scrollLeft = this.scroller.scrollLeft;
+                    this.scroller.style.cursor = 'grabbing';
+                    this.scroller.style.scrollBehavior = 'auto'; // Disable smooth for dragging
+                    e.preventDefault();
+                });
+
+                this.scroller.addEventListener('mouseleave', () => {
+                    this.isDragging = false;
+                    this.scroller.style.cursor = 'default';
+                    this.scroller.style.scrollBehavior = 'smooth'; // Re-enable smooth
+                });
+
+                this.scroller.addEventListener('mouseup', () => {
+                    this.isDragging = false;
+                    this.scroller.style.cursor = 'grab';
+                    this.scroller.style.scrollBehavior = 'smooth'; // Re-enable smooth
+                });
+
+                this.scroller.addEventListener('mousemove', (e) => {
+                    if (!this.isDragging) return;
+                    e.preventDefault();
+                    const x = e.pageX - this.scroller.offsetLeft;
+                    const walk = (x - this.startX) * 2; // Multiply for faster scrolling
+                    this.scroller.scrollLeft = this.scrollLeft - walk;
+                });
+
+                // Add grab cursor
+                this.scroller.style.cursor = 'grab';
+            }
+        }
+
+        // Initialize hybrid carousel
+        const hybridCarousel = new HybridCarousel();
+
+        // Enhanced navigation with CSS scroll-snap support
         function scrollDestinations(direction) {
             const scroller = document.querySelector('.destinations-scroller');
             if (!scroller) return;
@@ -3809,16 +3879,16 @@
             const currentScroll = scroller.scrollLeft;
             const targetScroll = currentScroll + (direction * scrollDistance);
 
-            // Use native smooth scrolling
+            // Use native smooth scrolling with CSS scroll-snap
             scroller.scrollTo({
                 left: targetScroll,
                 behavior: 'smooth'
             });
         }
 
-        // Native touch support - no JavaScript needed, CSS scroll-snap handles everything
+        // Hybrid touch support
         function addTouchSupport() {
-            console.log('✅ Native CSS scroll-snap enabled - no JavaScript needed');
+            console.log('✅ Hybrid carousel enabled - CSS scroll-snap + desktop mouse drag');
         }
 
         // Make scroll function globally available
