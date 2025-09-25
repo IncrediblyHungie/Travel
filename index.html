@@ -3413,19 +3413,17 @@
                 };
             }
 
-            // Get current visual position (preserves momentum state)
+            // Get current visual position (ALWAYS from live CSS transform)
             getCurrentVisualPosition() {
-                if (this.momentum.isActive) {
-                    return this.momentum.position; // Use momentum position during animation
-                }
-
-                // Get position from CSS transform if needed
+                // CRITICAL: Always read from actual CSS transform, not internal state
+                // This ensures we capture the exact visual position during momentum animation
                 const transform = window.getComputedStyle(this.track).transform;
                 if (transform && transform !== 'none') {
                     const matrix = new DOMMatrix(transform);
-                    return matrix.m41; // translateX value
+                    return matrix.m41; // translateX value - the ACTUAL visual position
                 }
 
+                // Fallback if no transform exists yet
                 return this.momentum.position;
             }
 
@@ -3662,8 +3660,9 @@
                 const { slideWidth, cardsToShow, totalCards } = this.getDimensions();
                 const maxIndex = Math.max(0, totalCards - cardsToShow);
 
-                // Find nearest card from current position
-                let nearestIndex = Math.round(-this.momentum.position / slideWidth);
+                // Find nearest card from ACTUAL visual position (important for boundary cases)
+                const currentVisualPosition = this.getCurrentVisualPosition();
+                let nearestIndex = Math.round(-currentVisualPosition / slideWidth);
                 nearestIndex = Math.max(0, Math.min(nearestIndex, maxIndex));
 
                 // Update state and snap
