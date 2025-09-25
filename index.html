@@ -6,9 +6,9 @@
     <title>MEGA | A Journey Through All 50 States</title>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
-    <!-- Swiper.js CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <!-- Glider.js CDN - Native scrolling for smooth iOS performance -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glider-js@1/glider.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/glider-js@1/glider.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -295,43 +295,42 @@
             margin-bottom: 1rem;
         }
 
-        /* Swiper.js Container */
-        .destinations-swiper {
+        /* Glider.js Container - Native scrolling for smooth iOS performance */
+        .glider-contain {
             position: relative;
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 1rem;
-            overflow: hidden;
         }
 
-        .destinations-swiper .swiper-wrapper {
+        .glider {
             padding: 2rem 0;
         }
 
         @media (max-width: 768px) {
-            .destinations-swiper {
+            .glider-contain {
                 padding: 0 0.5rem;
             }
 
-            .destinations-swiper .swiper-wrapper {
+            .glider {
                 padding: 1rem 0;
             }
         }
 
-        .swiper-controls {
+        .glider-prev, .glider-next {
             position: absolute;
             top: 50%;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            pointer-events: none;
-            z-index: 20;
-            padding: 0 1rem;
             transform: translateY(-50%);
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
+            z-index: 20;
+            pointer-events: auto;
+        }
+
+        .glider-prev {
+            left: 1rem;
+        }
+
+        .glider-next {
+            right: 1rem;
         }
 
         .scroll-btn {
@@ -1792,14 +1791,12 @@
             <h2 class="section-title">Where Dreams Meet Reality</h2>
         </div>
         
-        <div class="destinations-swiper swiper">
-            <div class="swiper-wrapper" id="destinations-track">
+        <div class="glider-contain">
+            <div class="glider" id="destinations-track">
                 <!-- Dynamic content will be generated here by JavaScript -->
             </div>
-            <div class="swiper-controls">
-                <button class="scroll-btn prev swiper-button-prev" type="button">‹</button>
-                <button class="scroll-btn next swiper-button-next" type="button">›</button>
-            </div>
+            <button class="glider-prev scroll-btn" type="button">‹</button>
+            <button class="glider-next scroll-btn" type="button">›</button>
         </div>
     </section>
 
@@ -3225,7 +3222,7 @@
         function createOptimizedCard(location, gradient, index) {
             // Create main card container
             const card = document.createElement('div');
-            card.className = 'destination-card swiper-slide';
+            card.className = 'destination-card';
 
             // Create background
             const bg = document.createElement('div');
@@ -3759,98 +3756,68 @@
         }
 
 
-        // Swiper.js Configuration with Mobile Optimization
-        let destinationsSwiper = null;
+        // Glider.js Configuration - Native scrolling for smooth iOS performance
+        let destinationsGlider = null;
 
-        function initializeSwiper() {
-            // Destroy existing swiper if it exists
-            if (destinationsSwiper) {
-                destinationsSwiper.destroy(true, true);
+        function initializeGlider() {
+            // Destroy existing glider if it exists
+            if (destinationsGlider) {
+                destinationsGlider.destroy();
             }
 
-            // Initialize Swiper with mobile-optimized settings
-            destinationsSwiper = new Swiper('.destinations-swiper', {
-                // Free mode for natural momentum scrolling
-                freeMode: {
-                    enabled: true,
-                    momentum: true,
-                    momentumRatio: 1,
-                    momentumBounce: false,
-                    momentumBounceRatio: 1,
-                    momentumVelocityRatio: 1,
-                    sticky: false
-                },
+            // Wait for DOM to be ready
+            const gliderElement = document.querySelector('.glider');
+            if (!gliderElement) return;
 
-                // Hardware acceleration and performance
-                speed: 300,
-                touchEventsTarget: 'wrapper',
-                simulateTouch: true,
-                allowTouchMove: true,
-                touchReleaseOnEdges: false,
-
-                // Responsive slides
-                slidesPerView: 'auto',
-                spaceBetween: 16,
+            // Initialize Glider with mobile-optimized native scrolling
+            destinationsGlider = new Glider(gliderElement, {
+                // Mobile-first responsive settings
+                slidesToShow: 1.2, // Show partial next slide on mobile
+                slidesToScroll: 1,
+                draggable: true,
+                scrollLock: false, // Allow natural momentum
+                scrollLockDelay: 100,
 
                 // Navigation arrows
-                navigation: {
-                    nextEl: '.swiper-button-next',
-                    prevEl: '.swiper-button-prev',
+                arrows: {
+                    prev: '.glider-prev',
+                    next: '.glider-next'
                 },
 
-                // Mobile and desktop responsive settings
-                breakpoints: {
-                    // Mobile
-                    320: {
-                        spaceBetween: 16,
-                        touchRatio: 1,
-                        threshold: 5,
-                        freeMode: {
-                            enabled: true,
-                            momentum: true,
-                            momentumRatio: 1.2, // Enhanced momentum on mobile
-                            momentumBounce: false
+                // Responsive breakpoints for different devices
+                responsive: [
+                    {
+                        breakpoint: 480,
+                        settings: {
+                            slidesToShow: 1.5,
+                            slidesToScroll: 1
                         }
                     },
-                    // Tablet
-                    768: {
-                        spaceBetween: 20,
-                        touchRatio: 1,
-                        threshold: 8
+                    {
+                        breakpoint: 768,
+                        settings: {
+                            slidesToShow: 2.2,
+                            slidesToScroll: 1
+                        }
                     },
-                    // Desktop
-                    1024: {
-                        spaceBetween: 32,
-                        touchRatio: 0.8,
-                        threshold: 10
+                    {
+                        breakpoint: 1024,
+                        settings: {
+                            slidesToShow: 3,
+                            slidesToScroll: 2
+                        }
+                    },
+                    {
+                        breakpoint: 1400,
+                        settings: {
+                            slidesToShow: 3.5,
+                            slidesToScroll: 2
+                        }
                     }
-                },
-
-                // Touch settings for optimal mobile feel
-                touchStartPreventDefault: false,
-                touchStartForcePreventDefault: false,
-                touchMoveStopPropagation: false,
-
-                // Prevent interference with page scrolling
-                preventInteractionOnTransition: false,
-                touchReleaseOnEdges: false,
-                resistanceRatio: 0.85,
-
-                // Event handlers
-                on: {
-                    init: function() {
-                        console.log('✅ Swiper initialized for smooth mobile carousel');
-                    },
-                    touchStart: function() {
-                        // Prevent page scroll interference
-                        document.body.style.touchAction = 'pan-y';
-                    },
-                    touchEnd: function() {
-                        // Restore normal touch behavior
-                        document.body.style.touchAction = 'auto';
-                    }
-                }
+                ]
             });
+
+            console.log('✅ Glider initialized with native scrolling for smooth iOS performance');
         }
 
         // Ensure page starts at top on load
@@ -3886,17 +3853,17 @@
 
             generateDestinationCards();
 
-            // Initialize Swiper after cards are generated
+            // Initialize Glider after cards are generated
             setTimeout(() => {
-                initializeSwiper();
-                console.log('✅ Swiper carousel ready!');
+                initializeGlider();
+                console.log('✅ Glider carousel ready!');
             }, 100);
 
-            // Swiper handles navigation automatically through config
+            // Glider handles navigation automatically through config
 
             // Final log after everything is loaded
             setTimeout(() => {
-                console.log('✅ Swiper carousel fully initialized');
+                console.log('✅ Glider carousel fully initialized');
             }, 500);
 
             setTimeout(initializeMap, 1000);
