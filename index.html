@@ -319,7 +319,7 @@
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
             -webkit-overflow-scrolling: touch;
-            /* Transition handled by SimpleCarousel */
+            /* Transition handled by OptimizedCarousel */
         }
 
         @media (max-width: 768px) {
@@ -3351,8 +3351,8 @@
             }
         }
 
-        // Optimized Carousel Implementation with simplified physics for mobile
-        class SimpleCarousel {
+        // Optimized Carousel with Momentum Chaining and Natural Physics
+        class OptimizedCarousel {
             constructor() {
                 this.container = null;
                 this.track = null;
@@ -3360,27 +3360,25 @@
                 this.isTransitioning = false;
                 this.isMobile = window.innerWidth <= 768;
 
-                // Optimized touch state for mobile and desktop
+                // Simplified touch state
                 this.touch = {
                     startX: 0,
                     startY: 0,
                     currentX: 0,
                     currentY: 0,
                     startTime: 0,
-                    diff: 0,
                     isDragging: false,
                     isHorizontalSwipe: null,
-                    samples: [] // For velocity tracking (simplified on mobile)
+                    samples: []
                 };
 
-                // Momentum physics for both mobile and desktop (optimized for mobile)
+                // Physics-based momentum system (research-based)
                 this.momentum = {
                     velocity: 0,
-                    position: 0,
+                    position: 0,      // Single source of truth for position
                     isActive: false,
-                    friction: this.isMobile ? 0.96 : 0.95, // Higher friction value = LESS friction = MORE momentum
-                    threshold: this.isMobile ? 0.2 : 0.5, // Lower threshold on mobile for longer momentum
-                    velocityMultiplier: this.isMobile ? 3.5 : 1.0, // Amplify mobile velocity for better throw distance
+                    friction: 0.95,   // Exponential decay research-based value
+                    threshold: 0.3,   // Stop threshold
                     animationId: null
                 };
 
@@ -3393,22 +3391,14 @@
 
                 if (!this.track) return;
 
-                // Performance optimizations based on device
-                if (this.isMobile) {
-                    // Mobile: Gentle transitions for smooth snapping
-                    this.track.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                    this.track.style.willChange = 'auto';
-                } else {
-                    // Desktop: Smooth transitions with will-change
-                    this.track.style.transition = 'transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                    this.track.style.willChange = 'transform';
-                }
+                // Initialize momentum position
+                const { slideWidth } = this.getDimensions();
+                this.momentum.position = -this.currentIndex * slideWidth;
 
-                this.updatePosition();
                 this.bindEvents();
             }
 
-            // Get current carousel dimensions
+            // Get carousel dimensions
             getDimensions() {
                 const isMobile = window.innerWidth <= 768;
                 const cardWidth = isMobile ? 280 : 400;
@@ -3423,45 +3413,44 @@
                 };
             }
 
-            // Update carousel position (optimized transitions for mobile)
-            updatePosition(smooth = true) {
-                if (!this.track) return;
-
-                const { slideWidth } = this.getDimensions();
-                const translateX = -this.currentIndex * slideWidth;
-
-                // Smooth, gentle transitions for both platforms
-                if (smooth) {
-                    const transition = this.isMobile
-                        ? 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)' // Gentle ease for mobile
-                        : 'transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)';   // Smooth ease for desktop
-                    this.track.style.transition = transition;
-                } else {
-                    this.track.style.transition = 'none';
+            // Get current visual position (preserves momentum state)
+            getCurrentVisualPosition() {
+                if (this.momentum.isActive) {
+                    return this.momentum.position; // Use momentum position during animation
                 }
 
-                this.track.style.transform = `translate3d(${translateX}px, 0, 0)`;
+                // Get position from CSS transform if needed
+                const transform = window.getComputedStyle(this.track).transform;
+                if (transform && transform !== 'none') {
+                    const matrix = new DOMMatrix(transform);
+                    return matrix.m41; // translateX value
+                }
 
-                // Update global state
-                currentDestinationIndex = this.currentIndex;
+                return this.momentum.position;
             }
 
             // Move to specific slide
             goTo(index, smooth = true) {
                 if (this.isTransitioning) return;
 
-                const { cardsToShow, totalCards } = this.getDimensions();
+                const { slideWidth, cardsToShow, totalCards } = this.getDimensions();
                 const maxIndex = Math.max(0, totalCards - cardsToShow);
 
                 this.currentIndex = Math.max(0, Math.min(index, maxIndex));
-                this.updatePosition(smooth);
+                this.momentum.position = -this.currentIndex * slideWidth;
 
                 if (smooth) {
+                    this.track.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)';
                     this.isTransitioning = true;
                     setTimeout(() => {
                         this.isTransitioning = false;
-                    }, 400);
+                    }, 500);
+                } else {
+                    this.track.style.transition = 'none';
                 }
+
+                this.track.style.transform = `translate3d(${this.momentum.position}px, 0, 0)`;
+                currentDestinationIndex = this.currentIndex;
             }
 
             // Move by direction
@@ -3470,198 +3459,159 @@
                 this.goTo(newIndex, true);
             }
 
-            // Smart touch handling - only prevent scroll for horizontal swipes
+            // Touch start - preserve current position
             onTouchStart = (e) => {
                 if (this.isTransitioning) return;
 
                 const touch = e.touches ? e.touches[0] : e;
                 const now = Date.now();
 
-                // Stop any active momentum animation
+                // Preserve current visual position (FIX FOR DOUBLE THROW ISSUE)
+                this.momentum.position = this.getCurrentVisualPosition();
+
+                // Stop momentum but keep position
                 if (this.momentum.isActive) {
                     this.stopMomentum();
                 }
 
-                // Initialize touch tracking for momentum physics
+                // Initialize touch
                 this.touch.startX = touch.clientX;
-                this.touch.startY = touch.clientY; // Track Y for swipe direction detection
+                this.touch.startY = touch.clientY;
                 this.touch.currentX = touch.clientX;
                 this.touch.currentY = touch.clientY;
                 this.touch.startTime = now;
                 this.touch.isDragging = true;
-                this.touch.isHorizontalSwipe = null; // Determine based on movement
+                this.touch.isHorizontalSwipe = null;
                 this.touch.samples = [{ x: touch.clientX, time: now }];
 
-                // Get current momentum position
-                const { slideWidth } = this.getDimensions();
-                this.momentum.position = -this.currentIndex * slideWidth;
-
-                // Disable CSS transition during drag
+                // Disable CSS transitions during drag
                 this.track.style.transition = 'none';
 
-                // Desktop cursor feedback
                 if (!this.isMobile) {
                     this.track.style.cursor = 'grabbing';
                 }
-
-                // DON'T preventDefault() here - wait to determine swipe direction
             }
 
+            // Touch move - smart direction detection
             onTouchMove = (e) => {
-                if (!this.touch.startX || !this.touch.isDragging) return;
+                if (!this.touch.isDragging) return;
 
                 const touch = e.touches ? e.touches[0] : e;
                 const now = Date.now();
 
                 this.touch.currentX = touch.clientX;
                 this.touch.currentY = touch.clientY;
-                this.touch.diff = this.touch.currentX - this.touch.startX;
 
-                // Determine swipe direction on first significant movement
+                // Smart direction detection
                 if (this.touch.isHorizontalSwipe === null) {
                     const deltaX = Math.abs(this.touch.currentX - this.touch.startX);
                     const deltaY = Math.abs(this.touch.currentY - this.touch.startY);
 
-                    // More conservative threshold - require clear horizontal movement
-                    if (deltaX > 15 || deltaY > 15) {
-                        // Require horizontal movement to be significantly greater than vertical
-                        this.touch.isHorizontalSwipe = deltaX > deltaY * 1.5; // 1.5x more horizontal than vertical
+                    if (deltaX > 10 || deltaY > 10) {
+                        this.touch.isHorizontalSwipe = deltaX > deltaY * 1.2;
 
-                        // If it's vertical scrolling, completely abort carousel handling
+                        // If vertical, abort carousel control
                         if (!this.touch.isHorizontalSwipe) {
                             this.touch.isDragging = false;
-                            this.touch.startX = 0; // Clear all touch state
-                            this.touch.currentX = 0;
-                            this.touch.diff = 0;
-                            this.touch.samples = [];
-                            this.track.style.transition = this.isMobile
-                                ? 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)'
-                                : 'transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                            return; // Let the browser handle vertical scrolling
+                            this.track.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                            return;
                         }
                     } else {
-                        // Not enough movement yet - don't interfere with scrolling
                         return;
                     }
                 }
 
-                // Only handle confirmed horizontal swipes
-                if (this.touch.isHorizontalSwipe === false) {
-                    return; // Let browser handle vertical scrolling
-                }
+                if (this.touch.isHorizontalSwipe === false) return;
 
-                // Add sample for velocity tracking (optimized for mobile)
+                // Track velocity
                 this.touch.samples.push({ x: touch.clientX, time: now });
+                this.touch.samples = this.touch.samples.filter(sample => now - sample.time < 100);
 
-                // Keep sample history shorter on mobile for performance
-                const sampleWindow = this.isMobile ? 60 : 80; // Shortened for faster response
-                this.touch.samples = this.touch.samples.filter(sample => now - sample.time < sampleWindow);
-
-                // Get current position and apply drag
+                // Apply drag with boundary resistance
+                const diff = this.touch.currentX - this.touch.startX;
                 const { slideWidth, cardsToShow, totalCards } = this.getDimensions();
-                const newTranslateX = this.momentum.position + this.touch.diff;
+                const newPosition = this.momentum.position + diff;
 
-                // Apply boundary resistance (same for mobile and desktop)
-                let resistedX = newTranslateX;
+                // Boundary resistance
+                let displayPosition = newPosition;
                 const maxTranslateX = -(totalCards - cardsToShow) * slideWidth;
 
-                if (newTranslateX > 0) {
-                    resistedX = newTranslateX * 0.3; // Resistance at start
-                } else if (newTranslateX < maxTranslateX) {
-                    const excess = newTranslateX - maxTranslateX;
-                    resistedX = maxTranslateX + (excess * 0.3); // Resistance at end
+                if (newPosition > 0) {
+                    displayPosition = newPosition * 0.3;
+                } else if (newPosition < maxTranslateX) {
+                    const excess = newPosition - maxTranslateX;
+                    displayPosition = maxTranslateX + (excess * 0.3);
                 }
 
-                this.track.style.transform = `translate3d(${resistedX}px, 0, 0)`;
+                this.track.style.transform = `translate3d(${displayPosition}px, 0, 0)`;
 
-                // Only preventDefault for horizontal swipes
                 if (this.touch.isHorizontalSwipe) {
                     e.preventDefault();
                 }
             }
 
+            // Touch end - momentum chaining
             onTouchEnd = (e) => {
-                if (!this.touch.startX) return;
+                if (!this.touch.isDragging) return;
 
-                // If this was determined to be vertical scrolling, don't interfere
+                // If vertical scroll, exit cleanly
                 if (this.touch.isHorizontalSwipe === false) {
-                    this.touch.startX = 0;
-                    this.touch.currentX = 0;
-                    this.touch.diff = 0;
                     this.touch.isDragging = false;
-                    this.touch.samples = [];
-                    return; // Let browser handle the touch end
+                    return;
                 }
 
-                const now = Date.now();
-
-                // Calculate velocity from recent samples (works on both mobile and desktop)
+                // Calculate velocity from samples
                 let velocity = 0;
-                if (this.touch.samples && this.touch.samples.length >= 2) {
-                    // Use fewer samples on mobile for performance, more on desktop for accuracy
-                    const sampleCount = this.isMobile ? 2 : 3;
-                    const recentSamples = this.touch.samples.slice(-sampleCount);
-                    const firstSample = recentSamples[0];
-                    const lastSample = recentSamples[recentSamples.length - 1];
-                    const timeDiff = lastSample.time - firstSample.time;
-                    const positionDiff = lastSample.x - firstSample.x;
+                if (this.touch.samples.length >= 2) {
+                    const recent = this.touch.samples.slice(-3);
+                    const first = recent[0];
+                    const last = recent[recent.length - 1];
+                    const timeDiff = last.time - first.time;
 
                     if (timeDiff > 0) {
-                        velocity = positionDiff / timeDiff; // pixels per ms
+                        velocity = (last.x - first.x) / timeDiff;
                     }
                 }
 
-                // Update momentum position to current drag position
-                this.momentum.position += this.touch.diff;
+                // Update momentum position with drag
+                const diff = this.touch.currentX - this.touch.startX;
+                this.momentum.position += diff;
 
-                // Check if we should start momentum animation - optimized for mobile responsiveness
-                const minVelocity = this.isMobile ? 0.2 : 0.3; // Lower threshold on mobile for faster response
-                const hasSignificantVelocity = Math.abs(velocity) > minVelocity;
-                const hasSignificantDrag = Math.abs(this.touch.diff) > 20;
+                // Start momentum or snap
+                const hasVelocity = Math.abs(velocity) > 0.3;
+                const hasDrag = Math.abs(diff) > 20;
 
-                if (hasSignificantVelocity) {
-                    // Start momentum animation - works on both mobile and desktop
-                    this.startMomentum(velocity);
-                } else if (hasSignificantDrag) {
-                    // Medium drag without velocity - snap to nearest card
-                    this.snapToNearestCard(true);
+                if (hasVelocity) {
+                    // Apply mobile velocity boost
+                    const amplifiedVelocity = this.isMobile ? velocity * 2.5 : velocity;
+                    this.startMomentum(amplifiedVelocity);
+                } else if (hasDrag) {
+                    this.snapToNearestCard();
                 } else {
-                    // Small movement - snap back to current card
-                    this.snapToNearestCard(true);
+                    this.snapToNearestCard();
                 }
 
                 // Reset touch state
-                this.touch.startX = 0;
-                this.touch.currentX = 0;
-                this.touch.diff = 0;
                 this.touch.isDragging = false;
                 this.touch.samples = [];
 
-                // Desktop cursor feedback
                 if (!this.isMobile) {
                     this.track.style.cursor = 'grab';
                 }
             }
 
-            // Momentum physics methods
+            // Start momentum animation (research-based exponential decay)
             startMomentum(velocity) {
-                // Stop any existing momentum
                 this.stopMomentum();
 
-                // Apply velocity multiplier for mobile amplification
-                const amplifiedVelocity = velocity * this.momentum.velocityMultiplier;
-
-                // Initialize momentum state with amplified velocity
-                this.momentum.velocity = amplifiedVelocity;
+                this.momentum.velocity = velocity;
                 this.momentum.isActive = true;
-
-                // Disable CSS transitions for smooth RAF animation
                 this.track.style.transition = 'none';
 
-                // Start momentum animation loop
                 this.momentumAnimation();
             }
 
+            // Stop momentum
             stopMomentum() {
                 if (this.momentum.animationId) {
                     cancelAnimationFrame(this.momentum.animationId);
@@ -3671,111 +3621,62 @@
                 this.momentum.velocity = 0;
             }
 
+            // Momentum animation loop (exponential decay)
             momentumAnimation = () => {
                 if (!this.momentum.isActive) return;
 
                 const { slideWidth, cardsToShow, totalCards } = this.getDimensions();
                 const maxTranslateX = -(totalCards - cardsToShow) * slideWidth;
 
-                // Apply velocity to position
-                this.momentum.position += this.momentum.velocity * 16; // 16ms approximation for 60fps
+                // Update position with velocity
+                this.momentum.position += this.momentum.velocity * 16; // 60fps
 
-                // Apply friction to velocity (natural deceleration)
+                // Apply exponential decay (research-based)
                 this.momentum.velocity *= this.momentum.friction;
 
-                // Apply boundary resistance
+                // Boundary resistance
                 let displayPosition = this.momentum.position;
                 if (this.momentum.position > 0) {
-                    // Resistance at start
                     displayPosition = this.momentum.position * 0.3;
-                    this.momentum.velocity *= 0.8; // Extra dampening at boundaries
+                    this.momentum.velocity *= 0.7;
                 } else if (this.momentum.position < maxTranslateX) {
-                    // Resistance at end
                     const excess = this.momentum.position - maxTranslateX;
                     displayPosition = maxTranslateX + (excess * 0.3);
-                    this.momentum.velocity *= 0.8; // Extra dampening at boundaries
+                    this.momentum.velocity *= 0.7;
                 }
 
                 // Update visual position
                 this.track.style.transform = `translate3d(${displayPosition}px, 0, 0)`;
 
-                // Continue animation if velocity is above threshold
+                // Continue or snap
                 if (Math.abs(this.momentum.velocity) > this.momentum.threshold) {
                     this.momentum.animationId = requestAnimationFrame(this.momentumAnimation);
                 } else {
-                    // Momentum finished - snap to nearest card
                     this.stopMomentum();
-                    this.snapToNearestCard(true);
+                    this.snapToNearestCard();
                 }
             }
 
-            snapToNearestCard(smooth = true) {
+            // Natural snap to nearest card (simplified)
+            snapToNearestCard() {
                 const { slideWidth, cardsToShow, totalCards } = this.getDimensions();
                 const maxIndex = Math.max(0, totalCards - cardsToShow);
 
-                // Find nearest card index from current momentum position
+                // Find nearest card from current position
                 let nearestIndex = Math.round(-this.momentum.position / slideWidth);
                 nearestIndex = Math.max(0, Math.min(nearestIndex, maxIndex));
 
-                // Calculate how far off we are from the ideal position
-                const idealPosition = -nearestIndex * slideWidth;
-                const currentOffset = this.momentum.position - idealPosition;
-                const offsetThreshold = slideWidth * 0.25; // 25% of card width = significant offset
+                // Update state and snap
+                this.currentIndex = nearestIndex;
+                this.momentum.position = -nearestIndex * slideWidth;
 
-                // If we're significantly off-center, create a smooth bounce effect
-                if (smooth && Math.abs(currentOffset) > offsetThreshold) {
-                    this.smoothBounceToCard(nearestIndex, currentOffset);
-                } else {
-                    // Small offset or no smooth transition - snap directly
-                    this.currentIndex = nearestIndex;
-                    this.momentum.position = idealPosition;
+                this.track.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                this.track.style.transform = `translate3d(${this.momentum.position}px, 0, 0)`;
 
-                    if (smooth) {
-                        const transition = this.isMobile
-                            ? 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)'
-                            : 'transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                        this.track.style.transition = transition;
-                    }
-
-                    this.updatePosition(smooth);
-                }
+                currentDestinationIndex = this.currentIndex;
             }
 
-            // Smooth bounce effect when landing on partial cards
-            smoothBounceToCard(targetIndex, currentOffset) {
-                const { slideWidth } = this.getDimensions();
-                const idealPosition = -targetIndex * slideWidth;
-
-                // Calculate bounce parameters based on offset
-                const bounceIntensity = Math.min(Math.abs(currentOffset) / slideWidth, 0.15); // Max 15% bounce
-                const bounceDirection = currentOffset > 0 ? -1 : 1; // Opposite direction of offset
-                const bounceDistance = bounceIntensity * slideWidth * 0.3; // 30% of bounce intensity
-
-                // Phase 1: Bounce back slightly (overshoot)
-                const overshootPosition = idealPosition + (bounceDistance * bounceDirection);
-
-                // Set up elastic bounce transition - quick overshoot
-                this.track.style.transition = this.isMobile
-                    ? 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-                    : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-
-                this.track.style.transform = `translate3d(${overshootPosition}px, 0, 0)`;
-
-                // Phase 2: Settle to final position with elastic ease
-                setTimeout(() => {
-                    this.track.style.transition = this.isMobile
-                        ? 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)' // Gentle settle for mobile
-                        : 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)';   // Smooth settle for desktop
-
-                    this.track.style.transform = `translate3d(${idealPosition}px, 0, 0)`;
-
-                    // Update internal state
-                    this.currentIndex = targetIndex;
-                    this.momentum.position = idealPosition;
-                }, this.isMobile ? 250 : 300); // Match the overshoot duration
-            }
-
-            // Bind all events
+            // Bind events
             bindEvents() {
                 if (!this.track) return;
 
@@ -3785,7 +3686,7 @@
                 this.track.addEventListener('touchend', this.onTouchEnd, { passive: false });
                 this.track.addEventListener('touchcancel', this.onTouchEnd, { passive: false });
 
-                // Mouse events for desktop
+                // Mouse events
                 this.track.addEventListener('mousedown', (e) => {
                     this.onTouchStart(e);
 
@@ -3800,11 +3701,14 @@
                     document.addEventListener('mouseup', onMouseUp);
                 });
 
-                // Window resize
+                // Resize handler
                 window.addEventListener('resize', () => {
                     clearTimeout(this.resizeTimeout);
                     this.resizeTimeout = setTimeout(() => {
-                        this.updatePosition(false);
+                        const { slideWidth } = this.getDimensions();
+                        this.momentum.position = -this.currentIndex * slideWidth;
+                        this.track.style.transition = 'none';
+                        this.track.style.transform = `translate3d(${this.momentum.position}px, 0, 0)`;
                     }, 100);
                 });
             }
@@ -3812,22 +3716,25 @@
             // Reset to first slide
             reset() {
                 this.currentIndex = 0;
-                this.updatePosition(false);
+                this.momentum.position = 0;
+                this.track.style.transition = 'none';
+                this.track.style.transform = 'translate3d(0px, 0, 0)';
+                currentDestinationIndex = 0;
             }
         }
 
         // Create global carousel instance
-        const carousel = new SimpleCarousel();
+        const carousel = new OptimizedCarousel();
 
         // Updated scrollDestinations function using unified controller
         function scrollDestinations(direction) {
             carousel.move(direction);
         }
 
-        // Simple initialization - drag/touch handling is built into SimpleCarousel
+        // Simple initialization - drag/touch handling is built into OptimizedCarousel
         function addTouchSupport() {
-            // Touch support is automatically handled by SimpleCarousel
-            console.log('✅ Touch support ready - handled by SimpleCarousel');
+            // Touch support is automatically handled by OptimizedCarousel
+            console.log('✅ Touch support ready - handled by OptimizedCarousel');
         }
 
         // Make scroll function globally available
@@ -3859,7 +3766,7 @@
 
         // Initialize map when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Starting destination gallery with SimpleCarousel...');
+            console.log('🚀 Starting destination gallery with OptimizedCarousel...');
 
             // Force scroll to top first
             scrollToTop();
@@ -3871,7 +3778,7 @@
                 carousel.init(); // Initialize the simple carousel
                 resetScrollPosition();
                 addTouchSupport();
-                console.log('✅ SimpleCarousel ready!');
+                console.log('✅ OptimizedCarousel ready!');
             }, 100);
 
             // Add event listeners to buttons as backup
