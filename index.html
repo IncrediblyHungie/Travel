@@ -181,11 +181,7 @@
             white-space: nowrap;
         }
 
-        /* Prevent breaking within specific phrases */
-        .no-break {
-            white-space: nowrap;
-            display: inline-block;
-        }
+        /* Hero subtitle styling */
 
         /* Responsive subtitle adjustments for readability */
         @media (max-width: 600px) {
@@ -1798,7 +1794,7 @@
     <section class="hero">
         <div class="aurora-bg"></div>
         <img src="logo.svg" alt="Logo" style="max-width: 800px; height: auto; z-index: 3; position: relative; margin-bottom: 1rem;">
-        <p class="hero-subtitle">An Epic Journey • 50 States • <span class="no-break">Infinite Memories</span></p>
+        <p class="hero-subtitle">An Epic Journey • 50 States • Infinite Memories</p>
         
         <div class="nav-cards">
             <div class="nav-card">
@@ -3399,12 +3395,12 @@
 
                 // Performance optimizations based on device
                 if (this.isMobile) {
-                    // Mobile: Faster transitions, remove will-change when not animating
-                    this.track.style.transition = 'transform 0.3s ease-out';
+                    // Mobile: Gentle transitions for smooth snapping
+                    this.track.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)';
                     this.track.style.willChange = 'auto';
                 } else {
-                    // Desktop: Smoother transitions with will-change
-                    this.track.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    // Desktop: Smooth transitions with will-change
+                    this.track.style.transition = 'transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)';
                     this.track.style.willChange = 'transform';
                 }
 
@@ -3434,11 +3430,11 @@
                 const { slideWidth } = this.getDimensions();
                 const translateX = -this.currentIndex * slideWidth;
 
-                // Mobile-optimized transitions
+                // Smooth, gentle transitions for both platforms
                 if (smooth) {
                     const transition = this.isMobile
-                        ? 'transform 0.3s ease-out'
-                        : 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        ? 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)' // Gentle ease for mobile
+                        : 'transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)';   // Smooth ease for desktop
                     this.track.style.transition = transition;
                 } else {
                     this.track.style.transition = 'none';
@@ -3526,22 +3522,30 @@
                     const deltaX = Math.abs(this.touch.currentX - this.touch.startX);
                     const deltaY = Math.abs(this.touch.currentY - this.touch.startY);
 
-                    // Only consider it a swipe if movement is significant (10px threshold)
-                    if (deltaX > 10 || deltaY > 10) {
-                        this.touch.isHorizontalSwipe = deltaX > deltaY;
+                    // More conservative threshold - require clear horizontal movement
+                    if (deltaX > 15 || deltaY > 15) {
+                        // Require horizontal movement to be significantly greater than vertical
+                        this.touch.isHorizontalSwipe = deltaX > deltaY * 1.5; // 1.5x more horizontal than vertical
 
-                        // If it's vertical scrolling, stop carousel handling
+                        // If it's vertical scrolling, completely abort carousel handling
                         if (!this.touch.isHorizontalSwipe) {
                             this.touch.isDragging = false;
+                            this.touch.startX = 0; // Clear all touch state
+                            this.touch.currentX = 0;
+                            this.touch.diff = 0;
+                            this.touch.samples = [];
                             this.track.style.transition = this.isMobile
-                                ? 'transform 0.3s ease-out'
-                                : 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                                ? 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)'
+                                : 'transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)';
                             return; // Let the browser handle vertical scrolling
                         }
+                    } else {
+                        // Not enough movement yet - don't interfere with scrolling
+                        return;
                     }
                 }
 
-                // Only handle horizontal swipes
+                // Only handle confirmed horizontal swipes
                 if (this.touch.isHorizontalSwipe === false) {
                     return; // Let browser handle vertical scrolling
                 }
@@ -3578,6 +3582,16 @@
 
             onTouchEnd = (e) => {
                 if (!this.touch.startX) return;
+
+                // If this was determined to be vertical scrolling, don't interfere
+                if (this.touch.isHorizontalSwipe === false) {
+                    this.touch.startX = 0;
+                    this.touch.currentX = 0;
+                    this.touch.diff = 0;
+                    this.touch.isDragging = false;
+                    this.touch.samples = [];
+                    return; // Let browser handle the touch end
+                }
 
                 const now = Date.now();
 
@@ -3707,11 +3721,11 @@
                 this.currentIndex = nearestIndex;
                 this.momentum.position = -this.currentIndex * slideWidth;
 
-                // Apply optimized transition for mobile and desktop
+                // Apply smooth, gentle transition for mobile and desktop
                 if (smooth) {
                     const transition = this.isMobile
-                        ? 'transform 0.3s ease-out'
-                        : 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        ? 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)' // Gentle ease for mobile
+                        : 'transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)';   // Smooth ease for desktop
                     this.track.style.transition = transition;
                 }
 
