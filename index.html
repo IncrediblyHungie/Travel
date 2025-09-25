@@ -2424,8 +2424,8 @@
 
                 if (!this.track) return;
 
-                // Essential performance styles
-                this.track.style.transition = 'transform 0.3s ease-out';
+                // Essential performance styles with smooth easing
+                this.track.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                 this.track.style.willChange = 'transform';
 
                 this.updatePosition();
@@ -2454,7 +2454,7 @@
                 const { slideWidth } = this.getDimensions();
                 const translateX = -this.currentIndex * slideWidth;
 
-                this.track.style.transition = smooth ? 'transform 0.3s ease-out' : 'none';
+                this.track.style.transition = smooth ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
                 this.track.style.transform = `translate3d(${translateX}px, 0, 0)`;
 
                 // Update global state
@@ -2475,7 +2475,7 @@
                     this.isTransitioning = true;
                     setTimeout(() => {
                         this.isTransitioning = false;
-                    }, 300);
+                    }, 400);
                 }
             }
 
@@ -2497,6 +2497,7 @@
 
                 // Disable CSS transition during drag
                 this.track.style.transition = 'none';
+                this.track.style.cursor = 'grabbing';
 
                 e.preventDefault();
             }
@@ -2538,23 +2539,39 @@
                 const distance = Math.abs(this.touch.diff);
                 const velocity = distance / duration; // pixels per ms
 
-                // Re-enable CSS transition
-                this.track.style.transition = 'transform 0.3s ease-out';
+                // Re-enable CSS transition with smooth easing
+                this.track.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 
-                // Determine action based on swipe
-                if (distance > 50 || velocity > 0.3) {
-                    // Significant swipe - move to next/prev slide
+                const { slideWidth, cardsToShow, totalCards } = this.getDimensions();
+                const maxIndex = Math.max(0, totalCards - cardsToShow);
+
+                // Calculate where we are based on current drag position
+                const currentTranslateX = -this.currentIndex * slideWidth;
+                const draggedTranslateX = currentTranslateX + this.touch.diff;
+
+                // Find the nearest card position
+                let nearestIndex = Math.round(-draggedTranslateX / slideWidth);
+                nearestIndex = Math.max(0, Math.min(nearestIndex, maxIndex));
+
+                // Determine action based on swipe strength
+                if (distance > 50 || velocity > 0.5) {
+                    // Significant swipe - go to the calculated nearest position
+                    this.goTo(nearestIndex, true);
+                } else if (distance > 20) {
+                    // Medium drag - move at least one card in drag direction
                     const direction = this.touch.diff > 0 ? -1 : 1;
-                    this.move(direction);
+                    const targetIndex = this.currentIndex + direction;
+                    this.goTo(targetIndex, true);
                 } else {
                     // Small movement - snap back to current slide
                     this.updatePosition(true);
                 }
 
-                // Reset touch state
+                // Reset touch state and cursor
                 this.touch.startX = 0;
                 this.touch.currentX = 0;
                 this.touch.diff = 0;
+                this.track.style.cursor = 'grab';
             }
 
             // Bind all events
