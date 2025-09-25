@@ -3195,7 +3195,7 @@
             ];
 
             const isMobile = window.innerWidth <= 768;
-            const initialLoad = isMobile ? 6 : 10; // Load fewer cards initially on mobile
+            const initialLoad = isMobile ? 12 : 15; // Load more cards initially to prevent number loading delays
 
             // Create initial batch of cards for immediate display
             const fragment = document.createDocumentFragment();
@@ -3207,11 +3207,11 @@
 
             track.appendChild(fragment);
 
-            // Lazy load remaining cards on mobile, or load all immediately on desktop
+            // Load remaining cards faster on mobile to prevent number delays
             if (isMobile && journeyLocations.length > initialLoad) {
                 setTimeout(() => {
                     loadRemainingCards(track, journeyLocations, gradients, initialLoad);
-                }, 500); // Delay to improve initial load performance
+                }, 200); // Much shorter delay (200ms vs 500ms) for faster number loading
             } else if (!isMobile && journeyLocations.length > initialLoad) {
                 // Load remaining cards immediately on desktop
                 loadRemainingCards(track, journeyLocations, gradients, initialLoad);
@@ -3290,9 +3290,10 @@
             return card;
         }
 
-        // Load remaining cards in batches to prevent blocking
+        // Load remaining cards in optimized batches to prevent blocking
         function loadRemainingCards(track, locations, gradients, startIndex) {
-            const batchSize = 5; // Process cards in small batches
+            const isMobile = window.innerWidth <= 768;
+            const batchSize = isMobile ? 8 : 10; // Larger batches on mobile for faster loading
             let currentIndex = startIndex;
 
             function loadBatch() {
@@ -3309,12 +3310,21 @@
 
                 // Continue loading if there are more cards
                 if (currentIndex < locations.length) {
-                    // Use requestAnimationFrame for smooth loading
-                    requestAnimationFrame(loadBatch);
+                    // Load next batch immediately on mobile for faster number loading
+                    if (isMobile) {
+                        setTimeout(loadBatch, 50); // Very short delay on mobile
+                    } else {
+                        requestAnimationFrame(loadBatch); // Standard approach on desktop
+                    }
                 }
             }
 
-            requestAnimationFrame(loadBatch);
+            // Start first batch
+            if (isMobile) {
+                loadBatch(); // Load immediately on mobile
+            } else {
+                requestAnimationFrame(loadBatch);
+            }
         }
 
         // Optimized Carousel Implementation with simplified physics for mobile
@@ -3329,10 +3339,13 @@
                 // Optimized touch state for mobile and desktop
                 this.touch = {
                     startX: 0,
+                    startY: 0,
                     currentX: 0,
+                    currentY: 0,
                     startTime: 0,
                     diff: 0,
                     isDragging: false,
+                    isHorizontalSwipe: null,
                     samples: [] // For velocity tracking (simplified on mobile)
                 };
 
@@ -3341,8 +3354,8 @@
                     velocity: 0,
                     position: 0,
                     isActive: false,
-                    friction: this.isMobile ? 0.92 : 0.95, // Slightly higher friction on mobile for battery
-                    threshold: this.isMobile ? 0.8 : 0.5, // Higher threshold on mobile
+                    friction: this.isMobile ? 0.90 : 0.95, // Lower friction on mobile for more responsive scrolling
+                    threshold: this.isMobile ? 0.3 : 0.5, // Lower threshold on mobile for better response
                     animationId: null
                 };
 
@@ -3432,7 +3445,7 @@
                 this.goTo(newIndex, true);
             }
 
-            // Restored momentum physics for both mobile and desktop
+            // Smart touch handling - only prevent scroll for horizontal swipes
             onTouchStart = (e) => {
                 if (this.isTransitioning) return;
 
@@ -3446,9 +3459,12 @@
 
                 // Initialize touch tracking for momentum physics
                 this.touch.startX = touch.clientX;
+                this.touch.startY = touch.clientY; // Track Y for swipe direction detection
                 this.touch.currentX = touch.clientX;
+                this.touch.currentY = touch.clientY;
                 this.touch.startTime = now;
                 this.touch.isDragging = true;
+                this.touch.isHorizontalSwipe = null; // Determine based on movement
                 this.touch.samples = [{ x: touch.clientX, time: now }];
 
                 // Get current momentum position
@@ -3463,7 +3479,7 @@
                     this.track.style.cursor = 'grabbing';
                 }
 
-                e.preventDefault();
+                // DON'T preventDefault() here - wait to determine swipe direction
             }
 
             onTouchMove = (e) => {
@@ -3473,13 +3489,39 @@
                 const now = Date.now();
 
                 this.touch.currentX = touch.clientX;
+                this.touch.currentY = touch.clientY;
                 this.touch.diff = this.touch.currentX - this.touch.startX;
+
+                // Determine swipe direction on first significant movement
+                if (this.touch.isHorizontalSwipe === null) {
+                    const deltaX = Math.abs(this.touch.currentX - this.touch.startX);
+                    const deltaY = Math.abs(this.touch.currentY - this.touch.startY);
+
+                    // Only consider it a swipe if movement is significant (10px threshold)
+                    if (deltaX > 10 || deltaY > 10) {
+                        this.touch.isHorizontalSwipe = deltaX > deltaY;
+
+                        // If it's vertical scrolling, stop carousel handling
+                        if (!this.touch.isHorizontalSwipe) {
+                            this.touch.isDragging = false;
+                            this.track.style.transition = this.isMobile
+                                ? 'transform 0.3s ease-out'
+                                : 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                            return; // Let the browser handle vertical scrolling
+                        }
+                    }
+                }
+
+                // Only handle horizontal swipes
+                if (this.touch.isHorizontalSwipe === false) {
+                    return; // Let browser handle vertical scrolling
+                }
 
                 // Add sample for velocity tracking (optimized for mobile)
                 this.touch.samples.push({ x: touch.clientX, time: now });
 
                 // Keep sample history shorter on mobile for performance
-                const sampleWindow = this.isMobile ? 80 : 100; // 80ms vs 100ms
+                const sampleWindow = this.isMobile ? 60 : 80; // Shortened for faster response
                 this.touch.samples = this.touch.samples.filter(sample => now - sample.time < sampleWindow);
 
                 // Get current position and apply drag
@@ -3499,7 +3541,10 @@
 
                 this.track.style.transform = `translate3d(${resistedX}px, 0, 0)`;
 
-                e.preventDefault();
+                // Only preventDefault for horizontal swipes
+                if (this.touch.isHorizontalSwipe) {
+                    e.preventDefault();
+                }
             }
 
             onTouchEnd = (e) => {
@@ -3526,8 +3571,8 @@
                 // Update momentum position to current drag position
                 this.momentum.position += this.touch.diff;
 
-                // Check if we should start momentum animation
-                const minVelocity = this.isMobile ? 0.5 : 0.3; // Higher threshold on mobile for battery
+                // Check if we should start momentum animation - optimized for mobile responsiveness
+                const minVelocity = this.isMobile ? 0.2 : 0.3; // Lower threshold on mobile for faster response
                 const hasSignificantVelocity = Math.abs(velocity) > minVelocity;
                 const hasSignificantDrag = Math.abs(this.touch.diff) > 20;
 
