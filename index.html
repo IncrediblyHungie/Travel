@@ -2409,7 +2409,7 @@
             });
         }
 
-        // Simple, Proven Carousel Implementation (Based on Swiper.js patterns)
+        // Momentum Carousel Implementation (Physics-based with wheel-like behavior)
         class SimpleCarousel {
             constructor() {
                 this.container = null;
@@ -2417,13 +2417,24 @@
                 this.currentIndex = 0;
                 this.isTransitioning = false;
 
-                // Touch state
+                // Enhanced touch state with velocity tracking
                 this.touch = {
                     startX: 0,
                     currentX: 0,
                     startTime: 0,
                     endTime: 0,
-                    diff: 0
+                    diff: 0,
+                    samples: [] // Track recent drag samples for velocity calculation
+                };
+
+                // Momentum physics
+                this.momentum = {
+                    velocity: 0,
+                    position: 0,
+                    isActive: false,
+                    friction: 0.95, // Deceleration factor (0.9-0.98 range)
+                    threshold: 0.5, // Minimum velocity to continue momentum
+                    animationId: null
                 };
 
                 this.init();
@@ -2496,15 +2507,27 @@
                 this.goTo(newIndex, true);
             }
 
-            // Touch event handlers
+            // Touch event handlers with momentum physics
             onTouchStart = (e) => {
                 if (this.isTransitioning) return;
 
                 const touch = e.touches ? e.touches[0] : e;
+                const now = Date.now();
 
+                // Stop any active momentum animation
+                if (this.momentum.isActive) {
+                    this.stopMomentum();
+                }
+
+                // Initialize touch tracking
                 this.touch.startX = touch.clientX;
                 this.touch.currentX = touch.clientX;
-                this.touch.startTime = Date.now();
+                this.touch.startTime = now;
+                this.touch.samples = [{ x: touch.clientX, time: now }]; // Start velocity tracking
+
+                // Get current momentum position
+                const { slideWidth } = this.getDimensions();
+                this.momentum.position = -this.currentIndex * slideWidth;
 
                 // Disable CSS transition during drag
                 this.track.style.transition = 'none';
@@ -2517,13 +2540,18 @@
                 if (!this.touch.startX) return;
 
                 const touch = e.touches ? e.touches[0] : e;
+                const now = Date.now();
+
                 this.touch.currentX = touch.clientX;
                 this.touch.diff = this.touch.currentX - this.touch.startX;
 
+                // Add sample for velocity tracking (keep last 100ms of samples)
+                this.touch.samples.push({ x: touch.clientX, time: now });
+                this.touch.samples = this.touch.samples.filter(sample => now - sample.time < 100);
+
                 // Get current position and apply drag
                 const { slideWidth } = this.getDimensions();
-                const currentTranslateX = -this.currentIndex * slideWidth;
-                const newTranslateX = currentTranslateX + this.touch.diff;
+                const newTranslateX = this.momentum.position + this.touch.diff;
 
                 // Apply some resistance at boundaries
                 let resistedX = newTranslateX;
@@ -2545,44 +2573,130 @@
             onTouchEnd = (e) => {
                 if (!this.touch.startX) return;
 
-                this.touch.endTime = Date.now();
-                const duration = this.touch.endTime - this.touch.startTime;
-                const distance = Math.abs(this.touch.diff);
-                const velocity = distance / duration; // pixels per ms
+                const now = Date.now();
 
-                // Re-enable CSS transition with smooth easing
-                this.track.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                // Calculate velocity from recent samples (more accurate than start/end)
+                let velocity = 0;
+                if (this.touch.samples.length >= 2) {
+                    const recentSamples = this.touch.samples.slice(-3); // Use last 3 samples
+                    const firstSample = recentSamples[0];
+                    const lastSample = recentSamples[recentSamples.length - 1];
+                    const timeDiff = lastSample.time - firstSample.time;
+                    const positionDiff = lastSample.x - firstSample.x;
 
-                const { slideWidth, cardsToShow, totalCards } = this.getDimensions();
-                const maxIndex = Math.max(0, totalCards - cardsToShow);
+                    if (timeDiff > 0) {
+                        velocity = positionDiff / timeDiff; // pixels per ms
+                    }
+                }
 
-                // Calculate where we are based on current drag position
-                const currentTranslateX = -this.currentIndex * slideWidth;
-                const draggedTranslateX = currentTranslateX + this.touch.diff;
+                // Update momentum position to current drag position
+                this.momentum.position += this.touch.diff;
 
-                // Find the nearest card position
-                let nearestIndex = Math.round(-draggedTranslateX / slideWidth);
-                nearestIndex = Math.max(0, Math.min(nearestIndex, maxIndex));
+                // Check if we should start momentum animation
+                const minVelocity = 0.3; // Minimum velocity to trigger momentum (pixels/ms)
+                const hasSignificantVelocity = Math.abs(velocity) > minVelocity;
+                const hasSignificantDrag = Math.abs(this.touch.diff) > 20;
 
-                // Determine action based on swipe strength
-                if (distance > 50 || velocity > 0.5) {
-                    // Significant swipe - go to the calculated nearest position
-                    this.goTo(nearestIndex, true);
-                } else if (distance > 20) {
-                    // Medium drag - move at least one card in drag direction
-                    const direction = this.touch.diff > 0 ? -1 : 1;
-                    const targetIndex = this.currentIndex + direction;
-                    this.goTo(targetIndex, true);
+                if (hasSignificantVelocity) {
+                    // Start momentum animation with wheel-like physics
+                    this.startMomentum(velocity);
+                } else if (hasSignificantDrag) {
+                    // Medium drag without velocity - snap to nearest card
+                    this.snapToNearestCard(true);
                 } else {
-                    // Small movement - snap back to current slide
-                    this.updatePosition(true);
+                    // Small movement - snap back to current card
+                    this.snapToNearestCard(true);
                 }
 
                 // Reset touch state and cursor
                 this.touch.startX = 0;
                 this.touch.currentX = 0;
                 this.touch.diff = 0;
+                this.touch.samples = [];
                 this.track.style.cursor = 'grab';
+            }
+
+            // Momentum physics methods
+            startMomentum(velocity) {
+                // Stop any existing momentum
+                this.stopMomentum();
+
+                // Initialize momentum state
+                this.momentum.velocity = velocity;
+                this.momentum.isActive = true;
+
+                // Disable CSS transitions for smooth RAF animation
+                this.track.style.transition = 'none';
+
+                // Start momentum animation loop
+                this.momentumAnimation();
+            }
+
+            stopMomentum() {
+                if (this.momentum.animationId) {
+                    cancelAnimationFrame(this.momentum.animationId);
+                    this.momentum.animationId = null;
+                }
+                this.momentum.isActive = false;
+                this.momentum.velocity = 0;
+            }
+
+            momentumAnimation = () => {
+                if (!this.momentum.isActive) return;
+
+                const { slideWidth, cardsToShow, totalCards } = this.getDimensions();
+                const maxTranslateX = -(totalCards - cardsToShow) * slideWidth;
+
+                // Apply velocity to position
+                this.momentum.position += this.momentum.velocity * 16; // 16ms approximation for 60fps
+
+                // Apply friction to velocity (natural deceleration)
+                this.momentum.velocity *= this.momentum.friction;
+
+                // Apply boundary resistance
+                let displayPosition = this.momentum.position;
+                if (this.momentum.position > 0) {
+                    // Resistance at start
+                    displayPosition = this.momentum.position * 0.3;
+                    this.momentum.velocity *= 0.8; // Extra dampening at boundaries
+                } else if (this.momentum.position < maxTranslateX) {
+                    // Resistance at end
+                    const excess = this.momentum.position - maxTranslateX;
+                    displayPosition = maxTranslateX + (excess * 0.3);
+                    this.momentum.velocity *= 0.8; // Extra dampening at boundaries
+                }
+
+                // Update visual position
+                this.track.style.transform = `translate3d(${displayPosition}px, 0, 0)`;
+
+                // Continue animation if velocity is above threshold
+                if (Math.abs(this.momentum.velocity) > this.momentum.threshold) {
+                    this.momentum.animationId = requestAnimationFrame(this.momentumAnimation);
+                } else {
+                    // Momentum finished - snap to nearest card
+                    this.stopMomentum();
+                    this.snapToNearestCard(true);
+                }
+            }
+
+            snapToNearestCard(smooth = true) {
+                const { slideWidth, cardsToShow, totalCards } = this.getDimensions();
+                const maxIndex = Math.max(0, totalCards - cardsToShow);
+
+                // Find nearest card index from current momentum position
+                let nearestIndex = Math.round(-this.momentum.position / slideWidth);
+                nearestIndex = Math.max(0, Math.min(nearestIndex, maxIndex));
+
+                // Update current index and position
+                this.currentIndex = nearestIndex;
+                this.momentum.position = -this.currentIndex * slideWidth;
+
+                // Apply smooth transition to final position
+                if (smooth) {
+                    this.track.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                }
+
+                this.updatePosition(smooth);
             }
 
             // Bind all events
