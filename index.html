@@ -3360,7 +3360,7 @@
                 this.isTransitioning = false;
                 this.isMobile = window.innerWidth <= 768;
 
-                // Simplified touch state
+                // Mobile-optimized touch state with momentum interruption tracking
                 this.touch = {
                     startX: 0,
                     startY: 0,
@@ -3369,17 +3369,21 @@
                     startTime: 0,
                     isDragging: false,
                     isHorizontalSwipe: null,
-                    samples: []
+                    samples: [],
+                    wasInterrupted: false,  // Track if touch interrupted momentum
+                    lastTouchEnd: 0        // Track timing for consecutive touches
                 };
 
-                // Physics-based momentum system (research-based)
+                // Physics-based momentum system with mobile-specific optimizations
                 this.momentum = {
                     velocity: 0,
-                    position: 0,      // Single source of truth for position
+                    position: 0,           // Single source of truth for position
                     isActive: false,
-                    friction: 0.95,   // Exponential decay research-based value
-                    threshold: 0.3,   // Stop threshold
-                    animationId: null
+                    wasInterrupted: false, // Track if momentum was interrupted by touch
+                    friction: 0.95,        // Exponential decay research-based value
+                    threshold: 0.3,        // Stop threshold
+                    animationId: null,
+                    lastPosition: 0        // Track position before interruption
                 };
 
                 this.init();
@@ -3457,22 +3461,38 @@
                 this.goTo(newIndex, true);
             }
 
-            // Touch start - preserve current position
+            // Touch start - mobile-optimized momentum interruption handling
             onTouchStart = (e) => {
                 if (this.isTransitioning) return;
 
                 const touch = e.touches ? e.touches[0] : e;
                 const now = Date.now();
 
-                // Preserve current visual position (FIX FOR DOUBLE THROW ISSUE)
-                this.momentum.position = this.getCurrentVisualPosition();
+                // CRITICAL: Detect if this touch is interrupting active momentum
+                const wasMomentumActive = this.momentum.isActive;
+                let currentPosition = this.getCurrentVisualPosition();
 
-                // Stop momentum but keep position
-                if (this.momentum.isActive) {
+                // Mobile-specific: Handle consecutive touches (double swipe detection)
+                const timeSinceLastTouch = now - this.touch.lastTouchEnd;
+                const isConsecutiveTouch = timeSinceLastTouch < 100; // 100ms window for consecutive touches
+
+                if (wasMomentumActive) {
+                    // Store position before stopping momentum for momentum chaining
+                    this.momentum.lastPosition = currentPosition;
+                    this.momentum.wasInterrupted = true;
+                    this.touch.wasInterrupted = true;
+
+                    // Properly cancel animation frame (mobile best practice)
                     this.stopMomentum();
+
+                    // Update position after stopping to ensure sync
+                    currentPosition = this.getCurrentVisualPosition();
                 }
 
-                // Initialize touch
+                // Set momentum position to exact visual position
+                this.momentum.position = currentPosition;
+
+                // Initialize touch with interruption awareness
                 this.touch.startX = touch.clientX;
                 this.touch.startY = touch.clientY;
                 this.touch.currentX = touch.clientX;
@@ -3482,8 +3502,18 @@
                 this.touch.isHorizontalSwipe = null;
                 this.touch.samples = [{ x: touch.clientX, time: now }];
 
-                // Disable CSS transitions during drag
+                // Mobile-specific: Add velocity samples if this was a momentum interruption
+                if (wasMomentumActive && this.momentum.velocity !== 0) {
+                    // Preserve some of the interrupted velocity for chaining
+                    this.touch.samples.push({
+                        x: touch.clientX + (this.momentum.velocity * 10), // Scale velocity to position
+                        time: now - 50 // Simulate a slight time offset
+                    });
+                }
+
+                // Disable CSS transitions during drag (mobile optimization)
                 this.track.style.transition = 'none';
+                this.track.style.webkitTransform = this.track.style.transform; // iOS optimization
 
                 if (!this.isMobile) {
                     this.track.style.cursor = 'grabbing';
@@ -3548,17 +3578,20 @@
                 }
             }
 
-            // Touch end - momentum chaining
+            // Touch end - mobile-optimized momentum chaining
             onTouchEnd = (e) => {
+                const now = Date.now();
+
                 if (!this.touch.isDragging) return;
 
                 // If vertical scroll, exit cleanly
                 if (this.touch.isHorizontalSwipe === false) {
                     this.touch.isDragging = false;
+                    this.touch.lastTouchEnd = now;
                     return;
                 }
 
-                // Calculate velocity from samples
+                // Calculate velocity from samples with interruption awareness
                 let velocity = 0;
                 if (this.touch.samples.length >= 2) {
                     const recent = this.touch.samples.slice(-3);
@@ -3571,17 +3604,28 @@
                     }
                 }
 
+                // Mobile-specific: Enhance velocity if this was an interruption
+                if (this.touch.wasInterrupted && this.momentum.wasInterrupted) {
+                    // Add 25% of the interrupted momentum to new velocity (momentum chaining)
+                    const interruptedVelocity = this.momentum.velocity * 0.25;
+                    velocity += interruptedVelocity;
+                }
+
                 // Update momentum position with drag
                 const diff = this.touch.currentX - this.touch.startX;
                 this.momentum.position += diff;
 
-                // Start momentum or snap
-                const hasVelocity = Math.abs(velocity) > 0.3;
-                const hasDrag = Math.abs(diff) > 20;
+                // Mobile-optimized velocity thresholds
+                const mobileVelocityThreshold = this.isMobile ? 0.2 : 0.3;
+                const hasVelocity = Math.abs(velocity) > mobileVelocityThreshold;
+                const hasDrag = Math.abs(diff) > (this.isMobile ? 15 : 20);
 
                 if (hasVelocity) {
-                    // Apply mobile velocity boost
-                    const amplifiedVelocity = this.isMobile ? velocity * 2.5 : velocity;
+                    // Mobile-specific velocity amplification with momentum chaining
+                    let amplifiedVelocity = velocity;
+                    if (this.isMobile) {
+                        amplifiedVelocity *= this.touch.wasInterrupted ? 2.0 : 2.5; // Less amplification for interrupted momentum
+                    }
                     this.startMomentum(amplifiedVelocity);
                 } else if (hasDrag) {
                     this.snapToNearestCard();
@@ -3589,9 +3633,15 @@
                     this.snapToNearestCard();
                 }
 
-                // Reset touch state
+                // Reset touch state with tracking
                 this.touch.isDragging = false;
                 this.touch.samples = [];
+                this.touch.lastTouchEnd = now;
+                this.touch.wasInterrupted = false; // Reset interruption flag
+
+                // Reset momentum interruption flags
+                this.momentum.wasInterrupted = false;
+                this.momentum.lastPosition = 0;
 
                 if (!this.isMobile) {
                     this.track.style.cursor = 'grab';
@@ -3609,14 +3659,21 @@
                 this.momentumAnimation();
             }
 
-            // Stop momentum
+            // Stop momentum - mobile-optimized with proper cleanup
             stopMomentum() {
                 if (this.momentum.animationId) {
                     cancelAnimationFrame(this.momentum.animationId);
                     this.momentum.animationId = null;
                 }
+
+                // Mobile-specific: Ensure proper state cleanup
                 this.momentum.isActive = false;
-                this.momentum.velocity = 0;
+
+                // Don't reset velocity to 0 immediately if we're chaining momentum
+                // This preserves velocity for momentum interruption detection
+                if (!this.momentum.wasInterrupted) {
+                    this.momentum.velocity = 0;
+                }
             }
 
             // Momentum animation loop (exponential decay)
