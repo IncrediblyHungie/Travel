@@ -2871,9 +2871,36 @@
         // Make scroll function globally available
         window.scrollDestinations = scrollDestinations;
 
+        // Ensure page starts at top on load
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: 'instant'
+            });
+
+            // Fallback for older browsers
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+
+        // Additional page load handlers for maximum compatibility
+        window.addEventListener('load', scrollToTop);
+        window.addEventListener('beforeunload', function() {
+            scrollToTop();
+        });
+
+        // Mobile-specific scroll reset
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+
         // Initialize map when page loads
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Starting destination gallery with SimpleCarousel...');
+
+            // Force scroll to top first
+            scrollToTop();
 
             generateDestinationCards();
 
