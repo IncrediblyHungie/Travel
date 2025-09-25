@@ -215,7 +215,6 @@
         .destinations-track {
             display: flex;
             gap: 2rem;
-            transition: transform 0.5s ease;
             padding: 2rem 0;
             justify-content: flex-start;
             will-change: transform;
@@ -225,6 +224,7 @@
             -ms-user-select: none;
             user-select: none;
             touch-action: pan-y pinch-zoom;
+            /* No CSS transition - handled by JavaScript for precise control */
         }
 
         @media (max-width: 768px) {
@@ -2351,23 +2351,20 @@
         let currentDestinationIndex = 0;
         const destinationsPerView = 3;
 
-        // Reset scroll position when page loads
+        // Reset carousel position when page loads
         function resetScrollPosition() {
-            currentDestinationIndex = 0;
-            const track = document.getElementById('destinations-track');
-            if (track) {
-                track.style.transform = 'translateX(0px)';
-                track.style.transition = 'none'; // Disable transition for immediate reset
-
-                // Force reflow and re-enable transition
-                setTimeout(() => {
-                    track.style.transition = 'transform 0.5s ease';
-                }, 50);
-
-                console.log('Destination gallery reset to position 1 (index 0)');
-                console.log('Track transform:', track.style.transform);
+            if (carousel && carousel.track) {
+                carousel.reset();
+                console.log('Carousel reset to beginning using unified controller');
             } else {
-                console.error('Destinations track not found during reset');
+                // Fallback for initialization
+                currentDestinationIndex = 0;
+                const track = document.getElementById('destinations-track');
+                if (track) {
+                    track.style.transform = 'translate3d(0px, 0, 0)';
+                    track.style.transition = 'none';
+                    console.log('Fallback reset completed');
+                }
             }
         }
 
@@ -2409,40 +2406,165 @@
             });
         }
 
-        function scrollDestinations(direction) {
-            const track = document.getElementById('destinations-track');
-            if (!track) {
-                console.error('Track not found in scrollDestinations');
-                return;
+        // Unified Carousel Controller - handles all positioning and animations
+        class CarouselController {
+            constructor() {
+                this.track = null;
+                this.currentIndex = 0;
+                this.isAnimating = false;
+                this.isDragging = false;
+
+                // Initialize when DOM is ready
+                this.init();
             }
 
-            const isMobile = window.innerWidth <= 768;
-            const cardWidth = isMobile ? 280 + 16 : 400 + 32; // mobile: 280px + 1rem gap, desktop: 400px + 2rem gap
-            const cardsToShow = isMobile ? 1 : 3;
-            const maxIndex = Math.max(0, journeyLocations.length - cardsToShow);
+            init() {
+                this.track = document.getElementById('destinations-track');
+                if (!this.track) return;
 
-            console.log(`Before scroll: currentIndex=${currentDestinationIndex}, direction=${direction}, maxIndex=${maxIndex}`);
-
-            const newIndex = currentDestinationIndex + direction;
-            currentDestinationIndex = Math.max(0, Math.min(newIndex, maxIndex));
-
-            // Ensure we never go below 0 or above maxIndex
-            if (currentDestinationIndex < 0) {
-                currentDestinationIndex = 0;
-                console.log('Clamped to minimum index 0');
-            }
-            if (currentDestinationIndex > maxIndex) {
-                currentDestinationIndex = maxIndex;
-                console.log('Clamped to maximum index', maxIndex);
+                // Set initial styles for performance
+                this.track.style.willChange = 'transform';
+                this.track.style.backfaceVisibility = 'hidden';
             }
 
-            const translateX = -currentDestinationIndex * cardWidth;
-            track.style.transform = `translateX(${translateX}px)`;
+            // Calculate accurate dimensions from CSS
+            getDimensions() {
+                if (!this.track || !this.track.children.length) return null;
 
-            console.log(`After scroll: index=${currentDestinationIndex}, translateX=${translateX}px, showing destinations ${currentDestinationIndex + 1}-${Math.min(currentDestinationIndex + cardsToShow, journeyLocations.length)}`);
+                const isMobile = window.innerWidth <= 768;
+                const firstCard = this.track.children[0];
+                const trackStyle = window.getComputedStyle(this.track);
+
+                // Get actual card width and gap from DOM
+                const cardRect = firstCard.getBoundingClientRect();
+                const gap = parseFloat(trackStyle.gap) || (isMobile ? 16 : 32);
+
+                return {
+                    cardWidth: cardRect.width,
+                    gap: gap,
+                    slideWidth: cardRect.width + gap,
+                    cardsToShow: isMobile ? 1 : 3,
+                    isMobile: isMobile,
+                    totalCards: this.track.children.length
+                };
+            }
+
+            // Get maximum valid index
+            getMaxIndex() {
+                const dims = this.getDimensions();
+                if (!dims) return 0;
+                return Math.max(0, dims.totalCards - dims.cardsToShow);
+            }
+
+            // Get current transform value
+            getCurrentTransform() {
+                if (!this.track) return 0;
+                const transform = this.track.style.transform || 'translate3d(0px, 0, 0)';
+                const match = transform.match(/translate3d\((-?\d+(?:\.\d+)?)px/);
+                return match ? parseFloat(match[1]) : 0;
+            }
+
+            // Unified transform function with GPU acceleration
+            setTransform(x, smooth = false, duration = 400) {
+                if (!this.track) return;
+
+                const easing = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                this.track.style.transition = smooth ? `transform ${duration}ms ${easing}` : 'none';
+                this.track.style.transform = `translate3d(${x}px, 0, 0)`;
+
+                if (smooth) {
+                    this.isAnimating = true;
+                    setTimeout(() => {
+                        this.isAnimating = false;
+                    }, duration);
+                }
+            }
+
+            // Move to specific index with validation
+            goToIndex(index, smooth = true) {
+                const dims = this.getDimensions();
+                if (!dims) return;
+
+                // Validate and clamp index
+                const maxIndex = this.getMaxIndex();
+                const clampedIndex = Math.max(0, Math.min(index, maxIndex));
+
+                // Calculate target position
+                const targetX = -clampedIndex * dims.slideWidth;
+
+                // Update state
+                this.currentIndex = clampedIndex;
+                currentDestinationIndex = clampedIndex; // Keep global state in sync
+
+                // Animate to position
+                this.setTransform(targetX, smooth);
+
+                console.log(`Moved to index: ${clampedIndex}, translateX: ${targetX}px, showing cards ${clampedIndex + 1}-${Math.min(clampedIndex + dims.cardsToShow, dims.totalCards)}`);
+
+                return clampedIndex;
+            }
+
+            // Move by direction (1 = next, -1 = previous)
+            move(direction) {
+                if (this.isAnimating) return; // Prevent rapid clicking
+
+                const newIndex = this.currentIndex + direction;
+                return this.goToIndex(newIndex, true);
+            }
+
+            // Get nearest index based on current position
+            getNearestIndex() {
+                const dims = this.getDimensions();
+                if (!dims) return 0;
+
+                const currentX = this.getCurrentTransform();
+                const nearestIndex = Math.round(-currentX / dims.slideWidth);
+                const maxIndex = this.getMaxIndex();
+
+                return Math.max(0, Math.min(nearestIndex, maxIndex));
+            }
+
+            // Snap to nearest card (for drag end)
+            snapToNearest(smooth = true) {
+                const nearestIndex = this.getNearestIndex();
+                return this.goToIndex(nearestIndex, smooth);
+            }
+
+            // Apply boundary resistance for dragging
+            applyResistance(x) {
+                const dims = this.getDimensions();
+                if (!dims) return x;
+
+                const maxX = -this.getMaxIndex() * dims.slideWidth;
+                const resistance = 0.3;
+
+                if (x > 0) {
+                    // Resistance at the beginning
+                    return x * resistance;
+                } else if (x < maxX) {
+                    // Resistance at the end
+                    const excess = x - maxX;
+                    return maxX + (excess * resistance);
+                }
+
+                return x;
+            }
+
+            // Reset to first position
+            reset() {
+                this.goToIndex(0, false);
+            }
         }
 
-        // Enhanced drag/swipe system for smooth interaction
+        // Create global carousel instance
+        const carousel = new CarouselController();
+
+        // Updated scrollDestinations function using unified controller
+        function scrollDestinations(direction) {
+            carousel.move(direction);
+        }
+
+        // Enhanced drag system integrated with unified carousel controller
         let dragState = {
             isDragging: false,
             startX: 0,
@@ -2451,93 +2573,28 @@
             lastX: 0,
             lastTime: 0,
             velocity: 0,
-            startTranslateX: 0,
-            currentTranslateX: 0
+            startTranslateX: 0
         };
 
         function addTouchSupport() {
-            const track = document.getElementById('destinations-track');
-            if (!track) return;
+            if (!carousel.track) return;
 
-            // Get current card width and calculate boundaries
-            function getCardWidth() {
-                const isMobile = window.innerWidth <= 768;
-                return isMobile ? 280 + 16 : 400 + 32; // card width + gap
-            }
-
-            function getMaxTranslateX() {
-                const isMobile = window.innerWidth <= 768;
-                const cardsToShow = isMobile ? 1 : 3;
-                const maxIndex = Math.max(0, journeyLocations.length - cardsToShow);
-                return -maxIndex * getCardWidth();
-            }
-
-            function getCurrentTranslateX() {
-                const transform = track.style.transform || 'translateX(0px)';
-                const match = transform.match(/translateX\((-?\d+(?:\.\d+)?)px\)/);
-                return match ? parseFloat(match[1]) : 0;
-            }
-
-            function setTrackTransform(x, smooth = false) {
-                track.style.transition = smooth ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
-                track.style.transform = `translate3d(${x}px, 0, 0)`;
-                dragState.currentTranslateX = x;
-            }
-
-            function applyBoundaryResistance(x) {
-                const maxX = getMaxTranslateX();
-                const resistance = 0.3;
-
-                if (x > 0) {
-                    // Resistance when dragging past the beginning
-                    return x * resistance;
-                } else if (x < maxX) {
-                    // Resistance when dragging past the end
-                    const excess = x - maxX;
-                    return maxX + (excess * resistance);
-                }
-                return x;
-            }
-
-            function snapToNearestCard() {
-                const cardWidth = getCardWidth();
-                const nearestIndex = Math.round(-dragState.currentTranslateX / cardWidth);
-                const isMobile = window.innerWidth <= 768;
-                const cardsToShow = isMobile ? 1 : 3;
-                const maxIndex = Math.max(0, journeyLocations.length - cardsToShow);
-
-                // Clamp to valid range
-                const clampedIndex = Math.max(0, Math.min(nearestIndex, maxIndex));
-                const targetX = -clampedIndex * cardWidth;
-
-                // Update global state
-                currentDestinationIndex = clampedIndex;
-
-                // Animate to position
-                setTrackTransform(targetX, true);
-
-                console.log(`Snapped to index: ${clampedIndex}, translateX: ${targetX}px`);
-            }
-
+            // Handle momentum scrolling after drag ends
             function handleMomentum() {
-                if (Math.abs(dragState.velocity) > 0.5) {
-                    // Apply momentum based on velocity
-                    const momentumDistance = dragState.velocity * 100; // Adjust multiplier for feel
-                    const targetX = dragState.currentTranslateX + momentumDistance;
-                    const resistedX = applyBoundaryResistance(targetX);
-
-                    setTrackTransform(resistedX, true);
-                    dragState.currentTranslateX = resistedX;
-
-                    // Snap after momentum animation completes
-                    setTimeout(snapToNearestCard, 400);
+                if (Math.abs(dragState.velocity) > 0.8) {
+                    // Strong momentum - move to next/previous card
+                    const direction = dragState.velocity > 0 ? -1 : 1; // Invert because velocity is based on finger movement
+                    carousel.move(direction);
                 } else {
-                    snapToNearestCard();
+                    // Weak momentum - snap to nearest
+                    carousel.snapToNearest(true);
                 }
             }
 
-            // Touch Events
+            // Touch/Mouse event handlers
             function handleStart(e) {
+                if (carousel.isAnimating) return; // Don't interrupt animations
+
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const currentTime = Date.now();
 
@@ -2548,14 +2605,15 @@
                 dragState.startTime = currentTime;
                 dragState.lastTime = currentTime;
                 dragState.velocity = 0;
-                dragState.startTranslateX = getCurrentTranslateX();
-                dragState.currentTranslateX = dragState.startTranslateX;
+                dragState.startTranslateX = carousel.getCurrentTransform();
 
-                // Disable CSS transitions during drag
-                track.style.transition = 'none';
-                track.style.cursor = 'grabbing';
+                // Update carousel state
+                carousel.isDragging = true;
 
-                // Prevent text selection and scrolling
+                // Visual feedback
+                carousel.track.style.cursor = 'grabbing';
+
+                // Prevent default behaviors
                 if (e.touches) e.preventDefault();
             }
 
@@ -2567,22 +2625,22 @@
                 const deltaX = clientX - dragState.startX;
                 const timeDelta = currentTime - dragState.lastTime;
 
-                // Calculate velocity for momentum
-                if (timeDelta > 0) {
-                    dragState.velocity = (clientX - dragState.lastX) / timeDelta;
+                // Calculate velocity for momentum (with smoothing)
+                if (timeDelta > 10) { // Only calculate if enough time has passed
+                    const newVelocity = (clientX - dragState.lastX) / timeDelta;
+                    dragState.velocity = (dragState.velocity * 0.8) + (newVelocity * 0.2); // Smooth velocity
+                    dragState.lastX = clientX;
+                    dragState.lastTime = currentTime;
                 }
 
-                dragState.currentX = clientX;
-                dragState.lastX = clientX;
-                dragState.lastTime = currentTime;
-
-                // Apply real-time translation with boundary resistance
+                // Calculate target position with resistance
                 const targetX = dragState.startTranslateX + deltaX;
-                const resistedX = applyBoundaryResistance(targetX);
+                const resistedX = carousel.applyResistance(targetX);
 
-                setTrackTransform(resistedX);
+                // Apply real-time transform
+                carousel.setTransform(resistedX, false);
 
-                // Prevent scrolling and text selection
+                // Prevent page scrolling
                 e.preventDefault();
             }
 
@@ -2590,23 +2648,35 @@
                 if (!dragState.isDragging) return;
 
                 dragState.isDragging = false;
-                track.style.cursor = 'grab';
+                carousel.isDragging = false;
 
-                // Handle momentum or snap to nearest card
+                // Restore cursor
+                carousel.track.style.cursor = 'grab';
+
+                // Handle momentum or snap
                 handleMomentum();
             }
 
-            // Touch Events
+            // Add event listeners
+            const track = carousel.track;
+
+            // Touch events
             track.addEventListener('touchstart', handleStart, { passive: false });
             track.addEventListener('touchmove', handleMove, { passive: false });
             track.addEventListener('touchend', handleEnd);
             track.addEventListener('touchcancel', handleEnd);
 
-            // Mouse Events for desktop
+            // Mouse events for desktop
             track.addEventListener('mousedown', (e) => {
+                // Prevent text selection
+                e.preventDefault();
+
                 handleStart(e);
 
-                const handleMouseMove = (e) => handleMove(e);
+                const handleMouseMove = (e) => {
+                    handleMove(e);
+                };
+
                 const handleMouseUp = (e) => {
                     handleEnd(e);
                     document.removeEventListener('mousemove', handleMouseMove);
@@ -2619,6 +2689,8 @@
 
             // Set initial cursor
             track.style.cursor = 'grab';
+
+            console.log('Enhanced drag system initialized successfully');
         }
 
         // Make scroll function globally available
@@ -2630,18 +2702,18 @@
 
             generateDestinationCards();
 
-            // Reset position multiple times to ensure it sticks
+            // Reinitialize carousel after cards are generated
             setTimeout(() => {
+                carousel.init(); // Reinitialize carousel with new cards
                 resetScrollPosition();
-                console.log('First reset completed');
+                console.log('Carousel reinitialized and reset completed');
             }, 100);
 
+            // Add touch support after carousel is ready
             setTimeout(() => {
-                resetScrollPosition();
-                console.log('Second reset completed');
-            }, 300);
-
-            addTouchSupport();
+                addTouchSupport();
+                console.log('Touch support added');
+            }, 200);
 
             // Add event listeners to buttons as backup
             const prevBtn = document.querySelector('.scroll-btn.prev');
