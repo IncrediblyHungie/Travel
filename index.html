@@ -181,12 +181,24 @@
             white-space: nowrap;
         }
 
+        /* Prevent breaking within specific phrases */
+        .no-break {
+            white-space: nowrap;
+            display: inline-block;
+        }
+
         /* Responsive subtitle adjustments for readability */
         @media (max-width: 600px) {
             .hero-subtitle {
                 white-space: normal;
                 word-break: break-word;
                 line-height: 1.3;
+            }
+
+            /* Ensure "Infinite Memories" stays together on iPhone */
+            .no-break {
+                white-space: nowrap;
+                display: inline-block;
             }
         }
 
@@ -300,12 +312,17 @@
             justify-content: flex-start;
             will-change: transform;
             backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
             touch-action: pan-y pinch-zoom;
             cursor: grab;
+            /* Performance optimizations for smooth momentum */
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            -webkit-overflow-scrolling: touch;
             /* Transition handled by SimpleCarousel */
         }
 
@@ -402,18 +419,30 @@
             -ms-user-select: none;
             user-select: none;
             pointer-events: auto;
+            /* Performance optimizations */
+            will-change: transform;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
         }
 
         @media (max-width: 768px) {
             .destination-card {
                 min-width: 280px;
                 height: 400px;
+                /* Enhanced mobile performance */
+                transition: transform 0.3s ease-out;
+                will-change: auto; /* Remove will-change when not animating to save memory */
             }
 
             .destination-number {
                 font-size: 3rem;
                 top: 1rem;
                 right: 1rem;
+                /* Ensure numbers render immediately */
+                -webkit-transform: translateZ(0);
+                transform: translateZ(0);
             }
 
             .destination-content {
@@ -1769,7 +1798,7 @@
     <section class="hero">
         <div class="aurora-bg"></div>
         <img src="logo.svg" alt="Logo" style="max-width: 800px; height: auto; z-index: 3; position: relative; margin-bottom: 1rem;">
-        <p class="hero-subtitle">An Epic Journey • 50 States • Infinite Memories</p>
+        <p class="hero-subtitle">An Epic Journey • 50 States • <span class="no-break">Infinite Memories</span></p>
         
         <div class="nav-cards">
             <div class="nav-card">
@@ -3195,7 +3224,7 @@
             ];
 
             const isMobile = window.innerWidth <= 768;
-            const initialLoad = isMobile ? 12 : 15; // Load more cards initially to prevent number loading delays
+            const initialLoad = isMobile ? 25 : 20; // Load most/all cards initially on mobile for instant response
 
             // Create initial batch of cards for immediate display
             const fragment = document.createDocumentFragment();
@@ -3207,11 +3236,10 @@
 
             track.appendChild(fragment);
 
-            // Load remaining cards faster on mobile to prevent number delays
+            // Load remaining cards immediately on mobile for instant numbers
             if (isMobile && journeyLocations.length > initialLoad) {
-                setTimeout(() => {
-                    loadRemainingCards(track, journeyLocations, gradients, initialLoad);
-                }, 200); // Much shorter delay (200ms vs 500ms) for faster number loading
+                // Load remaining cards immediately for instant response
+                loadRemainingCards(track, journeyLocations, gradients, initialLoad);
             } else if (!isMobile && journeyLocations.length > initialLoad) {
                 // Load remaining cards immediately on desktop
                 loadRemainingCards(track, journeyLocations, gradients, initialLoad);
@@ -3354,8 +3382,9 @@
                     velocity: 0,
                     position: 0,
                     isActive: false,
-                    friction: this.isMobile ? 0.90 : 0.95, // Lower friction on mobile for more responsive scrolling
-                    threshold: this.isMobile ? 0.3 : 0.5, // Lower threshold on mobile for better response
+                    friction: this.isMobile ? 0.96 : 0.95, // Higher friction value = LESS friction = MORE momentum
+                    threshold: this.isMobile ? 0.2 : 0.5, // Lower threshold on mobile for longer momentum
+                    velocityMultiplier: this.isMobile ? 3.5 : 1.0, // Amplify mobile velocity for better throw distance
                     animationId: null
                 };
 
@@ -3605,8 +3634,11 @@
                 // Stop any existing momentum
                 this.stopMomentum();
 
-                // Initialize momentum state
-                this.momentum.velocity = velocity;
+                // Apply velocity multiplier for mobile amplification
+                const amplifiedVelocity = velocity * this.momentum.velocityMultiplier;
+
+                // Initialize momentum state with amplified velocity
+                this.momentum.velocity = amplifiedVelocity;
                 this.momentum.isActive = true;
 
                 // Disable CSS transitions for smooth RAF animation
