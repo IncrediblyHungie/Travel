@@ -787,6 +787,22 @@
             .glass-map {
                 height: 650px;
             }
+
+            /* Large iPad experience cards - center bottom row when wrapping */
+            .experience-cards {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 2.5rem;
+                max-width: 1200px;
+                margin: 4rem auto 0;
+            }
+
+            .exp-card {
+                flex: 1 1 calc(33.333% - 2.5rem);
+                min-width: 280px;
+                max-width: 350px;
+            }
         }
 
         /* Small Mobile Devices (extra coverage for very small screens) */
@@ -915,6 +931,22 @@
             .map-control-btn {
                 padding: 14px 18px;
                 font-size: 0.9rem;
+            }
+
+            /* iPad experience cards - center bottom row when wrapping */
+            .experience-cards {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 2rem;
+                max-width: 1200px;
+                margin: 4rem auto 0;
+            }
+
+            .exp-card {
+                flex: 1 1 calc(33.333% - 2rem);
+                min-width: 250px;
+                max-width: 300px;
             }
         }
 
