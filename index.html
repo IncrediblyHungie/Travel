@@ -2414,63 +2414,101 @@
                 this.isAnimating = false;
                 this.isDragging = false;
 
-                // Initialize when DOM is ready
+                // Performance cache system
+                this.cache = {
+                    cardWidth: 0,
+                    slideWidth: 0,
+                    gap: 0,
+                    cardsToShow: 1,
+                    totalCards: 0,
+                    maxIndex: 0,
+                    isMobile: false,
+                    lastUpdate: 0
+                };
+
+                // Physics system for Apple-style momentum
+                this.physics = {
+                    animationId: null,
+                    velocity: 0,
+                    position: 0,
+                    friction: 0.95, // Apple-style friction coefficient
+                    minVelocity: 0.1, // Minimum velocity before snapping
+                    isDecelerating: false
+                };
+
+                // Velocity tracking for accurate momentum
+                this.velocityTracker = {
+                    positions: [], // Array of {x, time} objects
+                    maxSamples: 5, // Track last 5 positions
+                    maxAge: 100 // Maximum age in ms
+                };
+
                 this.init();
+                this.bindResize();
             }
 
             init() {
                 this.track = document.getElementById('destinations-track');
                 if (!this.track) return;
 
-                // Set initial styles for performance
+                // Performance optimizations
                 this.track.style.willChange = 'transform';
                 this.track.style.backfaceVisibility = 'hidden';
+
+                // Pre-calculate dimensions
+                this.updateCache();
             }
 
-            // Calculate accurate dimensions from CSS
-            getDimensions() {
-                if (!this.track || !this.track.children.length) return null;
+            // Performance cache system - calculate once, use many times
+            updateCache() {
+                if (!this.track || !this.track.children.length) return;
+
+                const now = Date.now();
+                // Throttle cache updates to max once per 100ms
+                if (now - this.cache.lastUpdate < 100) return this.cache;
 
                 const isMobile = window.innerWidth <= 768;
                 const firstCard = this.track.children[0];
-                const trackStyle = window.getComputedStyle(this.track);
 
-                // Get actual card width and gap from DOM
+                if (!firstCard) return this.cache;
+
                 const cardRect = firstCard.getBoundingClientRect();
+                const trackStyle = window.getComputedStyle(this.track);
                 const gap = parseFloat(trackStyle.gap) || (isMobile ? 16 : 32);
 
-                return {
+                // Update cache
+                Object.assign(this.cache, {
                     cardWidth: cardRect.width,
                     gap: gap,
                     slideWidth: cardRect.width + gap,
                     cardsToShow: isMobile ? 1 : 3,
                     isMobile: isMobile,
-                    totalCards: this.track.children.length
-                };
+                    totalCards: this.track.children.length,
+                    maxIndex: Math.max(0, this.track.children.length - (isMobile ? 1 : 3)),
+                    lastUpdate: now
+                });
+
+                return this.cache;
             }
 
-            // Get maximum valid index
-            getMaxIndex() {
-                const dims = this.getDimensions();
-                if (!dims) return 0;
-                return Math.max(0, dims.totalCards - dims.cardsToShow);
-            }
-
-            // Get current transform value
-            getCurrentTransform() {
-                if (!this.track) return 0;
-                const transform = this.track.style.transform || 'translate3d(0px, 0, 0)';
-                const match = transform.match(/translate3d\((-?\d+(?:\.\d+)?)px/);
-                return match ? parseFloat(match[1]) : 0;
-            }
-
-            // Unified transform function with GPU acceleration
-            setTransform(x, smooth = false, duration = 400) {
+            // Optimized transform with RAF scheduling
+            setTransform(x, smooth = false, duration = 350) {
                 if (!this.track) return;
 
-                const easing = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                this.track.style.transition = smooth ? `transform ${duration}ms ${easing}` : 'none';
-                this.track.style.transform = `translate3d(${x}px, 0, 0)`;
+                // Use RAF for smooth animations
+                const applyTransform = () => {
+                    if (!this.track) return;
+
+                    const easing = 'cubic-bezier(0.23, 1, 0.320, 1)'; // Apple's favorite easing
+                    this.track.style.transition = smooth ? `transform ${duration}ms ${easing}` : 'none';
+                    this.track.style.transform = `translate3d(${x}px, 0, 0)`;
+                };
+
+                if (smooth || this.physics.isDecelerating) {
+                    requestAnimationFrame(applyTransform);
+                } else {
+                    applyTransform();
+                }
 
                 if (smooth) {
                     this.isAnimating = true;
@@ -2480,51 +2518,128 @@
                 }
             }
 
+            // Enhanced velocity tracking for Apple-style momentum
+            trackVelocity(x, time) {
+                // Add new position
+                this.velocityTracker.positions.push({ x, time });
+
+                // Remove old positions
+                const cutoff = time - this.velocityTracker.maxAge;
+                this.velocityTracker.positions = this.velocityTracker.positions
+                    .filter(pos => pos.time >= cutoff)
+                    .slice(-this.velocityTracker.maxSamples);
+            }
+
+            // Calculate velocity from tracked positions
+            getVelocity() {
+                const positions = this.velocityTracker.positions;
+                if (positions.length < 2) return 0;
+
+                const latest = positions[positions.length - 1];
+                const oldest = positions[0];
+                const timeDelta = latest.time - oldest.time;
+
+                if (timeDelta === 0) return 0;
+
+                return (latest.x - oldest.x) / timeDelta;
+            }
+
+            // Apple-style physics deceleration with natural momentum
+            startDeceleration(initialVelocity, startPosition) {
+                // Cancel any existing animation
+                if (this.physics.animationId) {
+                    cancelAnimationFrame(this.physics.animationId);
+                }
+
+                this.physics.velocity = initialVelocity * 0.6; // Scale for natural feel
+                this.physics.position = startPosition;
+                this.physics.isDecelerating = true;
+
+                const decelerateStep = () => {
+                    if (!this.physics.isDecelerating) return;
+
+                    // Apply friction - creates natural deceleration curve
+                    this.physics.velocity *= this.physics.friction;
+
+                    // Update position
+                    this.physics.position += this.physics.velocity;
+
+                    // Apply boundary resistance
+                    const resistedPosition = this.applyResistance(this.physics.position);
+
+                    // Set transform with RAF
+                    this.setTransform(resistedPosition, false);
+
+                    // Continue if velocity is significant
+                    if (Math.abs(this.physics.velocity) > this.physics.minVelocity) {
+                        this.physics.animationId = requestAnimationFrame(decelerateStep);
+                    } else {
+                        // Natural snap to nearest card
+                        this.physics.isDecelerating = false;
+                        setTimeout(() => this.snapToNearest(true), 50); // Small delay for natural feel
+                    }
+                };
+
+                this.physics.animationId = requestAnimationFrame(decelerateStep);
+            }
+
+            // Stop any ongoing physics animation
+            stopDeceleration() {
+                if (this.physics.animationId) {
+                    cancelAnimationFrame(this.physics.animationId);
+                    this.physics.animationId = null;
+                }
+                this.physics.isDecelerating = false;
+            }
+
             // Move to specific index with validation
             goToIndex(index, smooth = true) {
-                const dims = this.getDimensions();
-                if (!dims) return;
+                this.updateCache();
+
+                // Stop any ongoing physics
+                this.stopDeceleration();
 
                 // Validate and clamp index
-                const maxIndex = this.getMaxIndex();
-                const clampedIndex = Math.max(0, Math.min(index, maxIndex));
+                const clampedIndex = Math.max(0, Math.min(index, this.cache.maxIndex));
 
                 // Calculate target position
-                const targetX = -clampedIndex * dims.slideWidth;
+                const targetX = -clampedIndex * this.cache.slideWidth;
 
                 // Update state
                 this.currentIndex = clampedIndex;
                 currentDestinationIndex = clampedIndex; // Keep global state in sync
 
                 // Animate to position
-                this.setTransform(targetX, smooth);
-
-                console.log(`Moved to index: ${clampedIndex}, translateX: ${targetX}px, showing cards ${clampedIndex + 1}-${Math.min(clampedIndex + dims.cardsToShow, dims.totalCards)}`);
+                this.setTransform(targetX, smooth, smooth ? 350 : 0);
 
                 return clampedIndex;
             }
 
             // Move by direction (1 = next, -1 = previous)
             move(direction) {
-                if (this.isAnimating) return; // Prevent rapid clicking
+                if (this.isAnimating || this.physics.isDecelerating) return;
 
                 const newIndex = this.currentIndex + direction;
                 return this.goToIndex(newIndex, true);
             }
 
-            // Get nearest index based on current position
-            getNearestIndex() {
-                const dims = this.getDimensions();
-                if (!dims) return 0;
-
-                const currentX = this.getCurrentTransform();
-                const nearestIndex = Math.round(-currentX / dims.slideWidth);
-                const maxIndex = this.getMaxIndex();
-
-                return Math.max(0, Math.min(nearestIndex, maxIndex));
+            // Get current transform value (cached for performance)
+            getCurrentTransform() {
+                if (!this.track) return 0;
+                const transform = this.track.style.transform || 'translate3d(0px, 0, 0)';
+                const match = transform.match(/translate3d\((-?\d+(?:\.\d+)?)px/);
+                return match ? parseFloat(match[1]) : 0;
             }
 
-            // Snap to nearest card (for drag end)
+            // Get nearest index based on current position
+            getNearestIndex() {
+                this.updateCache();
+                const currentX = this.getCurrentTransform();
+                const nearestIndex = Math.round(-currentX / this.cache.slideWidth);
+                return Math.max(0, Math.min(nearestIndex, this.cache.maxIndex));
+            }
+
+            // Snap to nearest card with smooth animation
             snapToNearest(smooth = true) {
                 const nearestIndex = this.getNearestIndex();
                 return this.goToIndex(nearestIndex, smooth);
@@ -2532,17 +2647,13 @@
 
             // Apply boundary resistance for dragging
             applyResistance(x) {
-                const dims = this.getDimensions();
-                if (!dims) return x;
-
-                const maxX = -this.getMaxIndex() * dims.slideWidth;
-                const resistance = 0.3;
+                this.updateCache();
+                const maxX = -this.cache.maxIndex * this.cache.slideWidth;
+                const resistance = 0.25; // Slightly less resistance for smoother feel
 
                 if (x > 0) {
-                    // Resistance at the beginning
                     return x * resistance;
                 } else if (x < maxX) {
-                    // Resistance at the end
                     const excess = x - maxX;
                     return maxX + (excess * resistance);
                 }
@@ -2550,8 +2661,22 @@
                 return x;
             }
 
+            // Handle window resize efficiently
+            bindResize() {
+                let resizeTimeout;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(() => {
+                        this.cache.lastUpdate = 0; // Force cache update
+                        this.updateCache();
+                        this.goToIndex(this.currentIndex, false); // Reposition without animation
+                    }, 100);
+                }, { passive: true });
+            }
+
             // Reset to first position
             reset() {
+                this.stopDeceleration();
                 this.goToIndex(0, false);
             }
         }
@@ -2564,51 +2689,69 @@
             carousel.move(direction);
         }
 
-        // Enhanced drag system integrated with unified carousel controller
+        // Ultra-optimized drag system with Apple-style physics
         let dragState = {
             isDragging: false,
             startX: 0,
-            currentX: 0,
             startTime: 0,
-            lastX: 0,
-            lastTime: 0,
-            velocity: 0,
-            startTranslateX: 0
+            startTranslateX: 0,
+            rafId: null,
+            lastUpdateTime: 0
         };
 
         function addTouchSupport() {
             if (!carousel.track) return;
 
-            // Handle momentum scrolling after drag ends
-            function handleMomentum() {
-                if (Math.abs(dragState.velocity) > 0.8) {
-                    // Strong momentum - move to next/previous card
-                    const direction = dragState.velocity > 0 ? -1 : 1; // Invert because velocity is based on finger movement
-                    carousel.move(direction);
-                } else {
-                    // Weak momentum - snap to nearest
-                    carousel.snapToNearest(true);
-                }
-            }
+            // Throttled drag updates for performance (60fps max)
+            const throttledUpdate = (() => {
+                let scheduledUpdate = false;
 
-            // Touch/Mouse event handlers
+                return (clientX, currentTime) => {
+                    if (scheduledUpdate) return;
+
+                    scheduledUpdate = true;
+                    requestAnimationFrame(() => {
+                        if (!dragState.isDragging) {
+                            scheduledUpdate = false;
+                            return;
+                        }
+
+                        // Track velocity for physics
+                        carousel.trackVelocity(clientX, currentTime);
+
+                        // Calculate and apply position
+                        const deltaX = clientX - dragState.startX;
+                        const targetX = dragState.startTranslateX + deltaX;
+                        const resistedX = carousel.applyResistance(targetX);
+
+                        // Apply transform
+                        carousel.setTransform(resistedX, false);
+
+                        scheduledUpdate = false;
+                    });
+                };
+            })();
+
+            // Optimized event handlers
             function handleStart(e) {
-                if (carousel.isAnimating) return; // Don't interrupt animations
+                // Don't interrupt animations or existing drag
+                if (carousel.isAnimating || carousel.physics.isDecelerating) return;
 
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const currentTime = Date.now();
 
+                // Initialize drag state
                 dragState.isDragging = true;
                 dragState.startX = clientX;
-                dragState.currentX = clientX;
-                dragState.lastX = clientX;
                 dragState.startTime = currentTime;
-                dragState.lastTime = currentTime;
-                dragState.velocity = 0;
                 dragState.startTranslateX = carousel.getCurrentTransform();
 
                 // Update carousel state
                 carousel.isDragging = true;
+
+                // Clear velocity tracker
+                carousel.velocityTracker.positions = [];
+                carousel.trackVelocity(clientX, currentTime);
 
                 // Visual feedback
                 carousel.track.style.cursor = 'grabbing';
@@ -2622,25 +2765,14 @@
 
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const currentTime = Date.now();
-                const deltaX = clientX - dragState.startX;
-                const timeDelta = currentTime - dragState.lastTime;
 
-                // Calculate velocity for momentum (with smoothing)
-                if (timeDelta > 10) { // Only calculate if enough time has passed
-                    const newVelocity = (clientX - dragState.lastX) / timeDelta;
-                    dragState.velocity = (dragState.velocity * 0.8) + (newVelocity * 0.2); // Smooth velocity
-                    dragState.lastX = clientX;
-                    dragState.lastTime = currentTime;
+                // Throttle updates to 60fps max
+                if (currentTime - dragState.lastUpdateTime >= 16) {
+                    throttledUpdate(clientX, currentTime);
+                    dragState.lastUpdateTime = currentTime;
                 }
 
-                // Calculate target position with resistance
-                const targetX = dragState.startTranslateX + deltaX;
-                const resistedX = carousel.applyResistance(targetX);
-
-                // Apply real-time transform
-                carousel.setTransform(resistedX, false);
-
-                // Prevent page scrolling
+                // Always prevent scrolling
                 e.preventDefault();
             }
 
@@ -2653,44 +2785,58 @@
                 // Restore cursor
                 carousel.track.style.cursor = 'grab';
 
-                // Handle momentum or snap
-                handleMomentum();
+                // Get final velocity and position
+                const finalVelocity = carousel.getVelocity();
+                const currentPosition = carousel.getCurrentTransform();
+
+                // Determine momentum behavior
+                if (Math.abs(finalVelocity) > 1.2) {
+                    // Strong swipe - Apple-style momentum with physics deceleration
+                    carousel.startDeceleration(finalVelocity, currentPosition);
+                } else if (Math.abs(finalVelocity) > 0.3) {
+                    // Medium swipe - move to next/prev card
+                    const direction = finalVelocity > 0 ? -1 : 1;
+                    carousel.move(direction);
+                } else {
+                    // Slow drag - snap to nearest
+                    setTimeout(() => carousel.snapToNearest(true), 50);
+                }
             }
 
-            // Add event listeners
+            // Optimized event binding
             const track = carousel.track;
 
-            // Touch events
+            // Touch events with passive optimization where safe
             track.addEventListener('touchstart', handleStart, { passive: false });
             track.addEventListener('touchmove', handleMove, { passive: false });
-            track.addEventListener('touchend', handleEnd);
-            track.addEventListener('touchcancel', handleEnd);
+            track.addEventListener('touchend', handleEnd, { passive: true });
+            track.addEventListener('touchcancel', handleEnd, { passive: true });
 
             // Mouse events for desktop
             track.addEventListener('mousedown', (e) => {
-                // Prevent text selection
+                // Prevent text selection and context menu
                 e.preventDefault();
 
                 handleStart(e);
 
-                const handleMouseMove = (e) => {
-                    handleMove(e);
-                };
-
+                // Use document-level events for better tracking
+                const handleMouseMove = (e) => handleMove(e);
                 const handleMouseUp = (e) => {
                     handleEnd(e);
-                    document.removeEventListener('mousemove', handleMouseMove);
-                    document.removeEventListener('mouseup', handleMouseUp);
+                    document.removeEventListener('mousemove', handleMouseMove, { passive: false });
+                    document.removeEventListener('mouseup', handleMouseUp, { passive: true });
                 };
 
-                document.addEventListener('mousemove', handleMouseMove);
-                document.addEventListener('mouseup', handleMouseUp);
+                document.addEventListener('mousemove', handleMouseMove, { passive: false });
+                document.addEventListener('mouseup', handleMouseUp, { passive: true });
             });
 
-            // Set initial cursor
+            // Set initial cursor and accessibility
             track.style.cursor = 'grab';
+            track.setAttribute('role', 'slider');
+            track.setAttribute('aria-label', 'Destination carousel');
 
-            console.log('Enhanced drag system initialized successfully');
+            console.log('Ultra-optimized Apple-style drag system initialized ✨');
         }
 
         // Make scroll function globally available
