@@ -292,13 +292,26 @@
             margin-bottom: 1rem;
         }
 
-        /* Dynamic Scrolling Destinations */
+        /* Native CSS Scroll-Snap Carousel - Ultra Performance */
         .destinations-scroller {
             position: relative;
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 1rem;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+            scroll-behavior: smooth;
+
+            /* CSS Scroll Snap - Native browser momentum */
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+
+        /* Hide scrollbars */
+        .destinations-scroller::-webkit-scrollbar {
+            display: none;
         }
 
         .destinations-track {
@@ -306,20 +319,20 @@
             gap: 2rem;
             padding: 2rem 0;
             justify-content: flex-start;
-            will-change: transform;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            touch-action: pan-y pinch-zoom;
-            cursor: grab;
-            /* Performance optimizations for smooth momentum */
-            -webkit-transform: translateZ(0);
-            transform: translateZ(0);
-            -webkit-overflow-scrolling: touch;
-            /* Transition handled by OptimizedCarousel */
+            align-items: stretch;
+
+            /* Remove all JavaScript-related optimizations - let browser handle it */
+            will-change: auto;
+            backface-visibility: visible;
+            -webkit-backface-visibility: visible;
+            user-select: auto;
+            -webkit-user-select: auto;
+            -moz-user-select: auto;
+            -ms-user-select: auto;
+            touch-action: auto;
+            cursor: default;
+            transform: none;
+            -webkit-transform: none;
         }
 
         @media (max-width: 768px) {
@@ -410,35 +423,37 @@
             transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
             border-radius: 20px;
             flex-shrink: 0;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
+            user-select: auto;
             pointer-events: auto;
-            /* Performance optimizations */
-            will-change: transform;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            -webkit-transform: translateZ(0);
-            transform: translateZ(0);
+
+            /* CSS Scroll Snap - Native snap points */
+            scroll-snap-align: center;
+            scroll-snap-stop: always;
+
+            /* Remove JavaScript optimizations - let browser handle performance */
+            will-change: auto;
+            backface-visibility: visible;
         }
 
         @media (max-width: 768px) {
             .destination-card {
                 min-width: 280px;
                 height: 400px;
-                /* Enhanced mobile performance */
-                transition: transform 0.3s ease-out;
-                will-change: auto; /* Remove will-change when not animating to save memory */
+
+                /* CSS Scroll-Snap mobile optimization */
+                scroll-snap-align: start; /* Start alignment works better on mobile */
+            }
+
+            /* Mobile-specific scroll behavior */
+            .destinations-scroller {
+                scroll-padding-left: 0.5rem; /* Account for mobile padding */
+                scroll-snap-type: x mandatory; /* Ensure snap behavior on mobile */
             }
 
             .destination-number {
                 font-size: 3rem;
                 top: 1rem;
                 right: 1rem;
-                /* Ensure numbers render immediately */
-                -webkit-transform: translateZ(0);
-                transform: translateZ(0);
             }
 
             .destination-content {
@@ -3779,18 +3794,31 @@
             }
         }
 
-        // Create global carousel instance
-        const carousel = new OptimizedCarousel();
+        // DISABLED: Custom JavaScript carousel - replaced with native CSS scroll-snap
+        // const carousel = new OptimizedCarousel();
 
-        // Updated scrollDestinations function using unified controller
+        // Native CSS Scroll-Snap navigation functions
         function scrollDestinations(direction) {
-            carousel.move(direction);
+            const scroller = document.querySelector('.destinations-scroller');
+            if (!scroller) return;
+
+            const cardWidth = window.innerWidth <= 768 ? 280 : 400;
+            const gap = window.innerWidth <= 768 ? 16 : 32;
+            const scrollDistance = cardWidth + gap;
+
+            const currentScroll = scroller.scrollLeft;
+            const targetScroll = currentScroll + (direction * scrollDistance);
+
+            // Use native smooth scrolling
+            scroller.scrollTo({
+                left: targetScroll,
+                behavior: 'smooth'
+            });
         }
 
-        // Simple initialization - drag/touch handling is built into OptimizedCarousel
+        // Native touch support - no JavaScript needed, CSS scroll-snap handles everything
         function addTouchSupport() {
-            // Touch support is automatically handled by OptimizedCarousel
-            console.log('✅ Touch support ready - handled by OptimizedCarousel');
+            console.log('✅ Native CSS scroll-snap enabled - no JavaScript needed');
         }
 
         // Make scroll function globally available
