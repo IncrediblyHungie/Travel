@@ -120,11 +120,23 @@
             opacity: 0.8;
             text-transform: uppercase;
             animation: fadeIn 2s ease 0.5s both;
+            position: relative;
+            z-index: 10;
+            -webkit-transform: translate3d(0,0,0);
+            transform: translate3d(0,0,0);
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 0.6; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translate3d(0, 20px, 0);
+                -webkit-transform: translate3d(0, 20px, 0);
+            }
+            to {
+                opacity: 0.6;
+                transform: translate3d(0, 0, 0);
+                -webkit-transform: translate3d(0, 0, 0);
+            }
         }
 
         /* Glass Card Navigation */
@@ -134,6 +146,8 @@
             display: flex;
             gap: 2rem;
             z-index: 3;
+            -webkit-transform: translate3d(0,0,0);
+            transform: translate3d(0,0,0);
         }
 
         .nav-card {
@@ -726,7 +740,171 @@
             }
         }
 
-        /* Responsive */
+        /* Large Tablet/iPad Pro Responsive Design (1024px to 1366px) */
+        @media (min-width: 1024px) and (max-width: 1366px) {
+            .hero {
+                height: 100vh;
+                padding: 4rem 3rem;
+            }
+
+            .hero img {
+                max-width: 500px;
+                margin-bottom: 1.2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.3rem;
+                letter-spacing: 0.3em;
+                margin: 2rem 0 3rem 0;
+                z-index: 15;
+                position: relative;
+                -webkit-transform: translate3d(0,0,0);
+                transform: translate3d(0,0,0);
+            }
+
+            .nav-cards {
+                position: relative;
+                bottom: auto;
+                margin-top: 2.5rem;
+                z-index: 5;
+                gap: 2rem;
+                -webkit-transform: translate3d(0,0,0);
+                transform: translate3d(0,0,0);
+            }
+
+            .nav-card {
+                padding: 1.6rem 2.5rem;
+                font-size: 1.1rem;
+            }
+
+            .glass-map {
+                height: 650px;
+            }
+        }
+
+        /* Small Mobile Devices (extra coverage for very small screens) */
+        @media (max-width: 480px) {
+            .hero img {
+                max-width: 280px;
+                margin-bottom: 1rem;
+            }
+
+            .hero-title {
+                font-size: clamp(3rem, 8vw, 4rem);
+                margin-bottom: 1.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+                margin: 1.5rem 0 2rem 0;
+                letter-spacing: 0.2em;
+                position: relative;
+                z-index: 15;
+                -webkit-transform: translate3d(0,0,0);
+                transform: translate3d(0,0,0);
+            }
+
+            .nav-cards {
+                gap: 1rem;
+                margin-top: 2rem;
+            }
+
+            .nav-card {
+                padding: 1.2rem 1.8rem;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Ultra-Wide Screens (extra coverage for large displays) */
+        @media (min-width: 1367px) {
+            .hero img {
+                max-width: 900px;
+            }
+
+            .hero-title {
+                font-size: clamp(6rem, 8vw, 8rem);
+            }
+
+            .hero-subtitle {
+                font-size: 1.4rem;
+                letter-spacing: 0.4em;
+                position: relative;
+                z-index: 15;
+                -webkit-transform: translate3d(0,0,0);
+                transform: translate3d(0,0,0);
+            }
+
+            .nav-cards {
+                gap: 3rem;
+                margin-top: 4rem;
+            }
+
+            .nav-card {
+                padding: 2rem 3rem;
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Standard Tablet/iPad Responsive Design (768px to 1024px) */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .hero {
+                height: 100vh;
+                padding: 3rem 2rem;
+                box-sizing: border-box;
+            }
+
+            .hero img {
+                max-width: 450px;
+                margin-bottom: 1rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+                letter-spacing: 0.25em;
+                margin: 1.5rem 0 2.5rem 0;
+                z-index: 15;
+                position: relative;
+                -webkit-transform: translate3d(0,0,0);
+                transform: translate3d(0,0,0);
+            }
+
+            .nav-cards {
+                position: relative;
+                bottom: auto;
+                margin-top: 2rem;
+                z-index: 5;
+                gap: 1.5rem;
+                -webkit-transform: translate3d(0,0,0);
+                transform: translate3d(0,0,0);
+            }
+
+            .nav-card {
+                padding: 1.4rem 2.2rem;
+                font-size: 1rem;
+            }
+
+            /* Tablet gallery section */
+            .gallery {
+                padding: 8rem 2rem;
+            }
+
+            /* Tablet map controls */
+            .glass-map {
+                height: 600px;
+            }
+
+            .map-controls {
+                bottom: 25px;
+                gap: 12px;
+            }
+
+            .map-control-btn {
+                padding: 14px 18px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Mobile Responsive Design (max-width: 768px) */
         @media (max-width: 768px) {
             .destinations {
                 grid-template-columns: 1fr;
