@@ -819,13 +819,13 @@
             }
 
             /* Hide desktop controls on mobile */
-            .desktop-controls {
-                display: none;
+            .map-controls.desktop-controls {
+                display: none !important;
             }
 
             /* Mobile controls positioned under map */
-            .mobile-controls {
-                display: grid;
+            .map-controls.mobile-controls {
+                display: grid !important;
                 grid-template-columns: 1fr 1fr;
                 grid-template-rows: auto auto;
                 gap: 12px;
@@ -838,7 +838,7 @@
                 max-width: none;
             }
 
-            .mobile-controls .map-control-btn {
+            .map-controls.mobile-controls .map-control-btn {
                 padding: 16px 12px;
                 font-size: 0.85rem;
                 white-space: normal;
