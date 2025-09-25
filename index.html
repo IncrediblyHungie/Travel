@@ -3717,19 +3717,62 @@
                 let nearestIndex = Math.round(-this.momentum.position / slideWidth);
                 nearestIndex = Math.max(0, Math.min(nearestIndex, maxIndex));
 
-                // Update current index and position
-                this.currentIndex = nearestIndex;
-                this.momentum.position = -this.currentIndex * slideWidth;
+                // Calculate how far off we are from the ideal position
+                const idealPosition = -nearestIndex * slideWidth;
+                const currentOffset = this.momentum.position - idealPosition;
+                const offsetThreshold = slideWidth * 0.25; // 25% of card width = significant offset
 
-                // Apply smooth, gentle transition for mobile and desktop
-                if (smooth) {
-                    const transition = this.isMobile
-                        ? 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)' // Gentle ease for mobile
-                        : 'transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)';   // Smooth ease for desktop
-                    this.track.style.transition = transition;
+                // If we're significantly off-center, create a smooth bounce effect
+                if (smooth && Math.abs(currentOffset) > offsetThreshold) {
+                    this.smoothBounceToCard(nearestIndex, currentOffset);
+                } else {
+                    // Small offset or no smooth transition - snap directly
+                    this.currentIndex = nearestIndex;
+                    this.momentum.position = idealPosition;
+
+                    if (smooth) {
+                        const transition = this.isMobile
+                            ? 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)'
+                            : 'transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                        this.track.style.transition = transition;
+                    }
+
+                    this.updatePosition(smooth);
                 }
+            }
 
-                this.updatePosition(smooth);
+            // Smooth bounce effect when landing on partial cards
+            smoothBounceToCard(targetIndex, currentOffset) {
+                const { slideWidth } = this.getDimensions();
+                const idealPosition = -targetIndex * slideWidth;
+
+                // Calculate bounce parameters based on offset
+                const bounceIntensity = Math.min(Math.abs(currentOffset) / slideWidth, 0.15); // Max 15% bounce
+                const bounceDirection = currentOffset > 0 ? -1 : 1; // Opposite direction of offset
+                const bounceDistance = bounceIntensity * slideWidth * 0.3; // 30% of bounce intensity
+
+                // Phase 1: Bounce back slightly (overshoot)
+                const overshootPosition = idealPosition + (bounceDistance * bounceDirection);
+
+                // Set up elastic bounce transition - quick overshoot
+                this.track.style.transition = this.isMobile
+                    ? 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                    : 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
+                this.track.style.transform = `translate3d(${overshootPosition}px, 0, 0)`;
+
+                // Phase 2: Settle to final position with elastic ease
+                setTimeout(() => {
+                    this.track.style.transition = this.isMobile
+                        ? 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)' // Gentle settle for mobile
+                        : 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)';   // Smooth settle for desktop
+
+                    this.track.style.transform = `translate3d(${idealPosition}px, 0, 0)`;
+
+                    // Update internal state
+                    this.currentIndex = targetIndex;
+                    this.momentum.position = idealPosition;
+                }, this.isMobile ? 250 : 300); // Match the overshoot duration
             }
 
             // Bind all events
