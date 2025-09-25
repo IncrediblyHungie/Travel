@@ -75,6 +75,30 @@
             color: var(--text-dark);
             overflow-x: hidden;
             cursor: auto;
+            /* Modern layout foundation - CSS Grid */
+            display: grid;
+            grid-template-rows: auto;
+            min-height: 100vh;
+        }
+
+        /* Section Layout System - Predictable Stacking */
+        main {
+            display: grid;
+            grid-template-rows: auto;
+            isolation: isolate; /* Creates new stacking context */
+        }
+
+        /* Universal Section Standards */
+        section {
+            /* Consistent section spacing */
+            padding: clamp(var(--space-2xl), 8vh, var(--space-3xl)) var(--content-padding);
+            /* Prevent section overlap */
+            contain: layout;
+            /* Natural content flow */
+            min-height: fit-content;
+            /* Clear positioning strategy */
+            position: relative;
+            z-index: var(--z-default);
         }
 
         /* Custom Cursor - Hidden */
@@ -899,6 +923,12 @@
             padding: 8rem 2rem;
             background: linear-gradient(180deg, var(--primary-bg), var(--coral-warm));
             text-align: center;
+            /* Ensure this section doesn't overlap final-cta */
+            position: relative;
+            z-index: var(--z-default);
+            /* Force section to end cleanly */
+            margin-bottom: 0;
+            contain: layout;
         }
 
         .experience-cards {
@@ -959,30 +989,55 @@
             line-height: 1.6;
         }
 
-        /* CTA Section */
+        /* CTA Section - Bulletproof Layout */
         .final-cta {
-            height: 100vh;
+            /* Remove fixed height - let content determine height */
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            position: relative;
             background: linear-gradient(135deg, var(--coral-light), var(--coral-medium), var(--sunset-pink));
-            overflow: hidden;
-            z-index: 10;
+            /* Use systematic z-index */
+            z-index: var(--z-content);
+            /* Ensure this section is always above others */
+            position: relative;
+            /* Create new stacking context */
+            isolation: isolate;
         }
 
         .cta-content {
             text-align: center;
-            z-index: 15;
+            /* Content is automatically in the isolated context */
+            z-index: var(--z-content);
             position: relative;
+            /* Ensure content spacing */
+            padding: var(--space-2xl);
         }
 
         .cta-title {
             font-size: clamp(3rem, 7vw, 6rem);
             font-weight: 100;
-            margin-bottom: 2rem;
+            /* Ensure title is always visible */
+            color: white;
+            text-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.3),
+                0 4px 8px rgba(0, 0, 0, 0.2);
+            /* Fallback background for visibility */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: var(--space-lg);
+            border-radius: 20px;
+            margin-bottom: var(--space-xl);
             letter-spacing: 0.1em;
+            /* Defensive positioning */
+            position: relative;
+            z-index: var(--z-content);
+            /* Ensure it works on all screen sizes */
+            width: 100%;
+            max-width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .cta-button {
