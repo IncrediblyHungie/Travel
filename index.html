@@ -822,13 +822,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            transition: all 0.3s ease;
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
             margin: 0;
             padding: 0;
             border: 2px solid rgba(255, 255, 255, 0.8);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            /* Ensure no transforms affect Mapbox positioning */
+            /* No position or transform properties to avoid Mapbox positioning conflicts */
         }
 
         .journey-marker.completed {
@@ -846,12 +845,10 @@
 
         @keyframes currentPulse {
             0%, 100% {
-                transform: scale(1);
                 box-shadow: 0 4px 30px rgba(255, 215, 0, 0.8);
             }
             50% {
-                transform: scale(1.15);
-                box-shadow: 0 6px 40px rgba(255, 215, 0, 1);
+                box-shadow: 0 8px 60px rgba(255, 215, 0, 1);
             }
         }
 
@@ -1835,6 +1832,9 @@
         // Track currently open popup for mobile single-popup behavior
         let currentMobilePopup = null;
 
+        // Track all marker instances for proper cleanup
+        let markerInstances = [];
+
         function addJourneyMarkers() {
             journeyLocations.forEach(location => {
                 let markerStatus = '';
@@ -1856,12 +1856,15 @@
                 
                 if (useDefaultMarker) {
                     // Use default Mapbox markers to verify coordinates
-                    const marker = new mapboxgl.Marker({ 
+                    const marker = new mapboxgl.Marker({
                         color: markerColor,
                         scale: 0.7
                     })
                         .setLngLat(location.coordinates)
                         .addTo(map);
+
+                    // Track marker instance for proper cleanup
+                    markerInstances.push(marker);
                     
                     // Add popup to default marker
                     const popupContent = `
@@ -1949,7 +1952,6 @@
                         padding: 0;
                         border: 2px solid rgba(255, 255, 255, 0.8);
                         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                        position: relative;
                         text-shadow: ${markerStatus === 'future' ? '0 1px 2px rgba(0, 0, 0, 0.5)' : '0 1px 2px rgba(255, 255, 255, 0.5)'};
                     `;
 
@@ -1962,6 +1964,9 @@
                     })
                         .setLngLat(location.coordinates)
                         .addTo(map);
+
+                    // Track marker instance for proper cleanup
+                    markerInstances.push(marker);
                     
                     // Add popup
                     const popupContent = `
@@ -2333,6 +2338,15 @@
                 currentMobilePopup = null;
             }
 
+            // Properly dispose of all Mapbox Marker instances
+            markerInstances.forEach(marker => {
+                if (marker && typeof marker.remove === 'function') {
+                    marker.remove();
+                }
+            });
+            markerInstances = []; // Clear the array
+
+            // Clean up any remaining DOM elements as fallback
             const markers = document.querySelectorAll('.journey-marker');
             markers.forEach(marker => marker.remove());
 
