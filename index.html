@@ -181,6 +181,7 @@
             padding: 10rem 0;
             position: relative;
             background: linear-gradient(180deg, var(--secondary-bg), var(--coral-light));
+            z-index: 1;
         }
 
         .gallery-header {
@@ -751,13 +752,37 @@
                 margin-right: 8px !important;
             }
 
+            /* Mobile hero section adjustments */
+            .hero {
+                min-height: 100vh;
+                height: auto;
+                padding: 2rem 1rem;
+                box-sizing: border-box;
+            }
+
             /* Mobile hero subtitle */
             .hero-subtitle {
                 font-size: 1rem;
                 letter-spacing: 0.2em;
                 padding: 0 1rem;
                 text-align: center;
-                margin-top: 0.5rem;
+                margin: 1.5rem 0 2rem 0;
+                z-index: 5;
+                position: relative;
+            }
+
+            /* Mobile nav cards positioning */
+            .nav-cards {
+                position: relative;
+                bottom: auto;
+                margin-top: 2rem;
+                z-index: 5;
+            }
+
+            /* Mobile gallery section */
+            .gallery {
+                padding: 6rem 1rem;
+                margin-top: 2rem;
             }
 
             /* Mobile experience cards */
