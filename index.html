@@ -42,6 +42,31 @@
             --glass: rgba(255, 255, 255, 0.8);
             --glass-border: rgba(255, 171, 145, 0.3);
             --glass-shadow: rgba(255, 107, 53, 0.1);
+
+            /* Consistent Spacing System - Mobile First */
+            --space-xs: 0.5rem;   /* 8px */
+            --space-sm: 1rem;     /* 16px */
+            --space-md: 1.5rem;   /* 24px */
+            --space-lg: 2rem;     /* 32px */
+            --space-xl: 3rem;     /* 48px */
+            --space-2xl: 4rem;    /* 64px */
+            --space-3xl: 6rem;    /* 96px */
+
+            /* Content spacing that scales with viewport */
+            --content-padding: clamp(var(--space-sm), 4vw, var(--space-xl));
+            --section-gap: clamp(var(--space-lg), 8vh, var(--space-3xl));
+
+            /* Z-Index System */
+            --z-background: -1;
+            --z-default: 1;
+            --z-content: 10;
+            --z-header: 100;
+            --z-overlay: 1000;
+            --z-modal: 10000;
+
+            /* Modern Viewport Units */
+            --vh-mobile: 100dvh; /* Dynamic viewport height for mobile */
+            --vh-desktop: 100vh; /* Standard viewport height for desktop */
         }
 
         body {
@@ -57,18 +82,21 @@
             display: none;
         }
 
-        /* Hero Section */
+        /* ===== HERO SECTION - MOBILE FIRST, CONTENT-OUT APPROACH ===== */
+
+        /* Core Hero Styles - Mobile First */
         .hero {
-            min-height: max(100vh, 700px);
-            position: relative;
+            /* Use dynamic viewport height for mobile, natural content flow */
+            min-height: var(--vh-mobile);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             background: linear-gradient(135deg, var(--light-cream), var(--coral-warm), var(--coral-light));
+            padding: var(--content-padding);
+            gap: var(--space-lg);
+            position: relative;
             overflow: hidden;
-            padding: clamp(2rem, 5vh, 4rem) clamp(1rem, 3vw, 3rem);
-            box-sizing: border-box;
         }
 
         /* Viewport height safety for very short screens */
