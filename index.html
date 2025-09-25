@@ -815,8 +815,8 @@
         }
 
         .journey-marker {
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
@@ -826,36 +826,47 @@
             transition: all 0.3s ease;
             margin: 0;
             padding: 0;
-            border: none;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             /* Ensure no transforms affect Mapbox positioning */
         }
 
         .journey-marker.completed {
-            background: linear-gradient(135deg, #FF6B35, #FFAB91);
-            box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+            background: linear-gradient(135deg, #FF6B35, #FFAB91) !important;
+            box-shadow: 0 4px 20px rgba(255, 107, 53, 0.6) !important;
+            border-color: rgba(255, 255, 255, 0.9) !important;
         }
 
         .journey-marker.current {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            background: linear-gradient(135deg, #FFD700, #FFA500) !important;
+            box-shadow: 0 4px 30px rgba(255, 215, 0, 0.8) !important;
             animation: currentPulse 2s infinite;
+            border-color: rgba(255, 255, 255, 1) !important;
         }
 
         @keyframes currentPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
-            50% { transform: scale(1.2); box-shadow: 0 0 50px rgba(255, 215, 0, 1); }
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 4px 30px rgba(255, 215, 0, 0.8);
+            }
+            50% {
+                transform: scale(1.15);
+                box-shadow: 0 6px 40px rgba(255, 215, 0, 1);
+            }
         }
 
         .journey-marker.future {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 2px solid rgba(255, 255, 255, 0.4) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
         }
 
         .marker-number {
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: 700;
             color: #000;
             z-index: 2;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
         }
 
         .journey-marker.future .marker-number {
@@ -1841,7 +1852,7 @@
                 }
                 
                 // Toggle between default and custom markers for testing
-                const useDefaultMarker = true; // Set to true to test with default markers
+                const useDefaultMarker = false; // Set to false to use custom numbered markers
                 
                 if (useDefaultMarker) {
                     // Use default Mapbox markers to verify coordinates
@@ -1922,22 +1933,24 @@
 
                     // Set explicit dimensions with NO transforms to preserve coordinate accuracy
                     markerEl.style.cssText = `
-                        width: 24px;
-                        height: 24px;
+                        width: 32px;
+                        height: 32px;
                         border-radius: 50%;
-                        background: ${markerStatus === 'completed' ? 'linear-gradient(135deg, #8E24AA, #C084FC)' :
+                        background: ${markerStatus === 'completed' ? 'linear-gradient(135deg, #FF6B35, #FFAB91)' :
                                      markerStatus === 'current' ? 'linear-gradient(135deg, #FFD700, #FFA500)' :
                                      'rgba(255, 255, 255, 0.1)'};
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         color: ${markerStatus === 'future' ? '#fff' : '#000'};
-                        font-size: 11px;
-                        font-weight: 600;
+                        font-size: 14px;
+                        font-weight: 700;
                         margin: 0;
                         padding: 0;
-                        border: none;
+                        border: 2px solid rgba(255, 255, 255, 0.8);
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
                         position: relative;
+                        text-shadow: ${markerStatus === 'future' ? '0 1px 2px rgba(0, 0, 0, 0.5)' : '0 1px 2px rgba(255, 255, 255, 0.5)'};
                     `;
 
                     markerEl.textContent = location.id.toString();
