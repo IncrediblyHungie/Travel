@@ -633,11 +633,13 @@
             position: relative;
             background: linear-gradient(135deg, var(--coral-light), var(--coral-medium), var(--sunset-pink));
             overflow: hidden;
+            z-index: 10;
         }
 
         .cta-content {
             text-align: center;
-            z-index: 2;
+            z-index: 15;
+            position: relative;
         }
 
         .cta-title {
@@ -778,54 +780,26 @@
                 border-radius: 20px;
             }
 
-            /* Mobile map controls - 2x2 grid layout */
+            /* Mobile map controls - better spaced 2x2 grid layout */
             .map-controls {
                 bottom: 15px;
-                gap: 8px;
+                gap: 12px;
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 grid-template-rows: 1fr 1fr;
                 width: auto;
-                max-width: 280px;
+                max-width: 320px;
                 transform: translateX(-50%);
             }
 
             .map-control-btn {
-                padding: 10px 6px;
-                font-size: 0.75rem;
+                padding: 12px 8px;
+                font-size: 0.8rem;
                 white-space: nowrap;
                 min-width: 0;
                 flex: 1;
                 text-align: center;
-            }
-
-            /* Shorter button labels for mobile 2x2 grid */
-            .map-control-btn {
-                position: relative;
-            }
-
-            .map-control-btn:nth-child(2) { /* Current Location -> Current */
-                text-indent: -9999px; /* Hide original text */
-            }
-            .map-control-btn:nth-child(2)::before {
-                content: "Current";
-                position: absolute;
-                left: 0;
-                right: 0;
-                text-indent: 0;
-                font-size: 0.75rem;
-            }
-
-            .map-control-btn:nth-child(3) { /* Previous Day -> Previous */
-                text-indent: -9999px; /* Hide original text */
-            }
-            .map-control-btn:nth-child(3)::before {
-                content: "Previous";
-                position: absolute;
-                left: 0;
-                right: 0;
-                text-indent: 0;
-                font-size: 0.75rem;
+                line-height: 1.2;
             }
 
             /* Mobile gallery header */
