@@ -2166,10 +2166,22 @@
             // Helper function to get route coordinates (cached or fallback to straight line)
             function getRouteCoordinates(startLocation, endLocation) {
                 const routeId = `${startLocation.id}-${endLocation.id}`;
+
+                // Force straight lines for flight segments: CA to Alaska and Alaska to Hawaii
+                const isFlightSegment = (
+                    (startLocation.id === 48 && endLocation.id === 49) || // Hawk Hill, CA to Alaska
+                    (startLocation.id === 49 && endLocation.id === 50)    // Alaska to Hawaii
+                );
+
+                if (isFlightSegment) {
+                    // Always use straight line for flights
+                    return [startLocation.coordinates, endLocation.coordinates];
+                }
+
                 if (routeCache[routeId] && routeCache[routeId].coordinates) {
                     return routeCache[routeId].coordinates;
                 }
-                // Fallback to straight line
+                // Fallback to straight line for other routes if no cached route
                 return [startLocation.coordinates, endLocation.coordinates];
             }
 
