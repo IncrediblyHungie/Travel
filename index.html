@@ -218,6 +218,13 @@
             transition: transform 0.5s ease;
             padding: 2rem 0;
             justify-content: flex-start;
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            touch-action: pan-y pinch-zoom;
         }
 
         @media (max-width: 768px) {
@@ -288,6 +295,11 @@
             transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
             border-radius: 20px;
             flex-shrink: 0;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            pointer-events: auto;
         }
 
         @media (max-width: 768px) {
@@ -733,6 +745,7 @@
                 letter-spacing: 0.2em;
                 padding: 0 1rem;
                 text-align: center;
+                margin-top: 0.5rem;
             }
 
             /* Mobile experience cards */
@@ -2429,39 +2442,183 @@
             console.log(`After scroll: index=${currentDestinationIndex}, translateX=${translateX}px, showing destinations ${currentDestinationIndex + 1}-${Math.min(currentDestinationIndex + cardsToShow, journeyLocations.length)}`);
         }
 
-        // Add touch support for mobile swiping
-        let startX = 0;
-        let currentX = 0;
-        let isDragging = false;
+        // Enhanced drag/swipe system for smooth interaction
+        let dragState = {
+            isDragging: false,
+            startX: 0,
+            currentX: 0,
+            startTime: 0,
+            lastX: 0,
+            lastTime: 0,
+            velocity: 0,
+            startTranslateX: 0,
+            currentTranslateX: 0
+        };
 
         function addTouchSupport() {
             const track = document.getElementById('destinations-track');
+            if (!track) return;
 
-            track.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-                isDragging = true;
-            });
+            // Get current card width and calculate boundaries
+            function getCardWidth() {
+                const isMobile = window.innerWidth <= 768;
+                return isMobile ? 280 + 16 : 400 + 32; // card width + gap
+            }
 
-            track.addEventListener('touchmove', (e) => {
-                if (!isDragging) return;
-                currentX = e.touches[0].clientX;
-                e.preventDefault();
-            });
+            function getMaxTranslateX() {
+                const isMobile = window.innerWidth <= 768;
+                const cardsToShow = isMobile ? 1 : 3;
+                const maxIndex = Math.max(0, journeyLocations.length - cardsToShow);
+                return -maxIndex * getCardWidth();
+            }
 
-            track.addEventListener('touchend', () => {
-                if (!isDragging) return;
+            function getCurrentTranslateX() {
+                const transform = track.style.transform || 'translateX(0px)';
+                const match = transform.match(/translateX\((-?\d+(?:\.\d+)?)px\)/);
+                return match ? parseFloat(match[1]) : 0;
+            }
 
-                const diffX = startX - currentX;
-                if (Math.abs(diffX) > 50) { // minimum swipe distance
-                    if (diffX > 0) {
-                        scrollDestinations(1); // swipe left = next
-                    } else {
-                        scrollDestinations(-1); // swipe right = previous
-                    }
+            function setTrackTransform(x, smooth = false) {
+                track.style.transition = smooth ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
+                track.style.transform = `translate3d(${x}px, 0, 0)`;
+                dragState.currentTranslateX = x;
+            }
+
+            function applyBoundaryResistance(x) {
+                const maxX = getMaxTranslateX();
+                const resistance = 0.3;
+
+                if (x > 0) {
+                    // Resistance when dragging past the beginning
+                    return x * resistance;
+                } else if (x < maxX) {
+                    // Resistance when dragging past the end
+                    const excess = x - maxX;
+                    return maxX + (excess * resistance);
+                }
+                return x;
+            }
+
+            function snapToNearestCard() {
+                const cardWidth = getCardWidth();
+                const nearestIndex = Math.round(-dragState.currentTranslateX / cardWidth);
+                const isMobile = window.innerWidth <= 768;
+                const cardsToShow = isMobile ? 1 : 3;
+                const maxIndex = Math.max(0, journeyLocations.length - cardsToShow);
+
+                // Clamp to valid range
+                const clampedIndex = Math.max(0, Math.min(nearestIndex, maxIndex));
+                const targetX = -clampedIndex * cardWidth;
+
+                // Update global state
+                currentDestinationIndex = clampedIndex;
+
+                // Animate to position
+                setTrackTransform(targetX, true);
+
+                console.log(`Snapped to index: ${clampedIndex}, translateX: ${targetX}px`);
+            }
+
+            function handleMomentum() {
+                if (Math.abs(dragState.velocity) > 0.5) {
+                    // Apply momentum based on velocity
+                    const momentumDistance = dragState.velocity * 100; // Adjust multiplier for feel
+                    const targetX = dragState.currentTranslateX + momentumDistance;
+                    const resistedX = applyBoundaryResistance(targetX);
+
+                    setTrackTransform(resistedX, true);
+                    dragState.currentTranslateX = resistedX;
+
+                    // Snap after momentum animation completes
+                    setTimeout(snapToNearestCard, 400);
+                } else {
+                    snapToNearestCard();
+                }
+            }
+
+            // Touch Events
+            function handleStart(e) {
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const currentTime = Date.now();
+
+                dragState.isDragging = true;
+                dragState.startX = clientX;
+                dragState.currentX = clientX;
+                dragState.lastX = clientX;
+                dragState.startTime = currentTime;
+                dragState.lastTime = currentTime;
+                dragState.velocity = 0;
+                dragState.startTranslateX = getCurrentTranslateX();
+                dragState.currentTranslateX = dragState.startTranslateX;
+
+                // Disable CSS transitions during drag
+                track.style.transition = 'none';
+                track.style.cursor = 'grabbing';
+
+                // Prevent text selection and scrolling
+                if (e.touches) e.preventDefault();
+            }
+
+            function handleMove(e) {
+                if (!dragState.isDragging) return;
+
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const currentTime = Date.now();
+                const deltaX = clientX - dragState.startX;
+                const timeDelta = currentTime - dragState.lastTime;
+
+                // Calculate velocity for momentum
+                if (timeDelta > 0) {
+                    dragState.velocity = (clientX - dragState.lastX) / timeDelta;
                 }
 
-                isDragging = false;
+                dragState.currentX = clientX;
+                dragState.lastX = clientX;
+                dragState.lastTime = currentTime;
+
+                // Apply real-time translation with boundary resistance
+                const targetX = dragState.startTranslateX + deltaX;
+                const resistedX = applyBoundaryResistance(targetX);
+
+                setTrackTransform(resistedX);
+
+                // Prevent scrolling and text selection
+                e.preventDefault();
+            }
+
+            function handleEnd(e) {
+                if (!dragState.isDragging) return;
+
+                dragState.isDragging = false;
+                track.style.cursor = 'grab';
+
+                // Handle momentum or snap to nearest card
+                handleMomentum();
+            }
+
+            // Touch Events
+            track.addEventListener('touchstart', handleStart, { passive: false });
+            track.addEventListener('touchmove', handleMove, { passive: false });
+            track.addEventListener('touchend', handleEnd);
+            track.addEventListener('touchcancel', handleEnd);
+
+            // Mouse Events for desktop
+            track.addEventListener('mousedown', (e) => {
+                handleStart(e);
+
+                const handleMouseMove = (e) => handleMove(e);
+                const handleMouseUp = (e) => {
+                    handleEnd(e);
+                    document.removeEventListener('mousemove', handleMouseMove);
+                    document.removeEventListener('mouseup', handleMouseUp);
+                };
+
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
             });
+
+            // Set initial cursor
+            track.style.cursor = 'grab';
         }
 
         // Make scroll function globally available
