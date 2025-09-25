@@ -242,56 +242,199 @@
             }
         }
 
-        /* Glass Card Navigation */
-        .nav-cards {
+        /* Animated Background */
+        .aurora-bg {
             position: absolute;
-            bottom: 50px;
+            inset: -50%; /* Modern shorthand for top/right/bottom/left */
+            background: linear-gradient(45deg, var(--sunset-orange), var(--sunset-pink), var(--sunset-purple));
+            filter: blur(100px);
+            opacity: 0.2;
+            animation: aurora 15s ease-in-out infinite;
+            z-index: var(--z-background);
+        }
+
+        @keyframes aurora {
+            0% { transform: translate(-20%, -10%) rotate(0deg) scale(1); }
+            50% { transform: translate(-5%, 20%) rotate(180deg) scale(1.4); }
+            100% { transform: translate(-20%, -10%) rotate(360deg) scale(1); }
+        }
+
+        /* Hero Content */
+        .hero img {
+            width: min(300px, 80vw);
+            height: auto;
+            z-index: var(--z-content);
+        }
+
+        .hero-subtitle {
+            font-size: clamp(0.9rem, 4vw, 1.1rem);
+            font-weight: 300;
+            letter-spacing: clamp(0.15em, 0.5vw, 0.3em);
+            text-transform: uppercase;
+            text-align: center;
+            color: var(--text-dark);
+            z-index: var(--z-content);
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.8);
+            line-height: 1.4;
+            /* Prevent awkward line breaks on mobile */
+            text-wrap: balance;
+        }
+
+        /* Navigation Cards - Natural Flow, No Absolute Positioning */
+        .nav-cards {
             display: flex;
-            gap: 2rem;
-            z-index: 3;
-            -webkit-transform: translate3d(0,0,0);
-            transform: translate3d(0,0,0);
+            gap: var(--space-md);
+            z-index: var(--z-content);
+            /* Mobile: stack vertically for better touch targets */
+            flex-direction: column;
+            width: 100%;
+            max-width: 300px;
         }
 
         .nav-card {
-            padding: 1.5rem 2.5rem;
+            padding: var(--space-md) var(--space-lg);
             background: var(--glass);
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.075, 0.82, 0.165, 1);
-            position: relative;
-            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
             color: var(--text-dark);
             box-shadow: 0 8px 32px var(--glass-shadow);
+            font-weight: 500;
+            font-size: 0.95rem;
+            letter-spacing: 0.05em;
         }
 
         .nav-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.2), transparent);
-            transition: left 0.6s;
+            inset: -2px;
+            background: linear-gradient(135deg, var(--sunset-orange), var(--sunset-pink));
+            border-radius: 20px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.4s;
         }
 
         .nav-card:hover::before {
-            left: 100%;
+            opacity: 1;
         }
 
         .nav-card:hover {
-            transform: translateY(-10px) scale(1.05);
-            background: rgba(255, 171, 145, 0.9);
-            box-shadow: 0 20px 40px var(--glass-shadow);
-            border-color: var(--sunset-orange);
+            transform: translateY(-5px);
+            color: white;
+            background: rgba(255, 255, 255, 0.9);
         }
+
+        /* ===== RESPONSIVE ENHANCEMENTS - MINIMAL MEDIA QUERIES ===== */
+
+        /* Small Tablets & Landscape Phones (min-width: 480px) */
+        @media (min-width: 480px) {
+            .nav-cards {
+                flex-direction: row;
+                justify-content: center;
+                max-width: none;
+            }
+
+            .nav-card {
+                min-width: 140px;
+            }
+        }
+
+        /* Tablets & Small Desktop (min-width: 768px) */
+        @media (min-width: 768px) {
+            .hero {
+                /* Use standard viewport on larger screens */
+                min-height: var(--vh-desktop);
+                gap: var(--space-xl);
+                padding: var(--space-2xl) var(--content-padding);
+            }
+
+            .hero img {
+                width: min(500px, 60vw);
+            }
+
+            .hero-subtitle {
+                font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            }
+
+            .nav-cards {
+                gap: var(--space-lg);
+            }
+
+            .nav-card {
+                padding: var(--space-md) var(--space-xl);
+                font-size: 1.1rem;
+                min-width: 160px;
+            }
+        }
+
+        /* Large Desktop (min-width: 1200px) */
+        @media (min-width: 1200px) {
+            .hero img {
+                width: min(700px, 50vw);
+            }
+
+            .hero-subtitle {
+                font-size: clamp(1.3rem, 2vw, 1.6rem);
+                letter-spacing: clamp(0.3em, 0.4vw, 0.4em);
+            }
+
+            .nav-cards {
+                gap: var(--space-xl);
+            }
+
+            .nav-card {
+                padding: var(--space-lg) var(--space-2xl);
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Handle Very Short Screens - Let content determine height */
+        @media (max-height: 600px) {
+            .hero {
+                min-height: auto;
+                padding: var(--space-lg) var(--content-padding);
+                gap: var(--space-md);
+            }
+        }
+
+        /* Smooth entrance animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero img,
+        .hero-subtitle,
+        .nav-cards {
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero-subtitle {
+            animation-delay: 0.2s;
+            animation-fill-mode: both;
+        }
+
+        .nav-cards {
+            animation-delay: 0.4s;
+            animation-fill-mode: both;
+        }
+
+        /* ===== END HERO SECTION ===== */
+
+
 
         /* Immersive Gallery */
         .gallery {
