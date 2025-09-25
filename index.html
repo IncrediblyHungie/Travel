@@ -6,6 +6,9 @@
     <title>MEGA | A Journey Through All 50 States</title>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <!-- Swiper.js CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -292,75 +295,30 @@
             margin-bottom: 1rem;
         }
 
-        /* Hybrid Approach: CSS Scroll-Snap + JavaScript enhancement */
-        .destinations-scroller {
+        /* Swiper.js Container */
+        .destinations-swiper {
             position: relative;
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 1rem;
-            overflow-x: auto;
-            overflow-y: hidden;
-            -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
-            scroll-behavior: smooth;
-
-            /* Enhanced CSS Scroll Snap for better mobile momentum */
-            scroll-snap-type: x mandatory;
-            scroll-snap-stop: normal; /* Allow momentum to skip snaps */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
-
-            /* Ensure proper stacking context for controls */
-            z-index: 1;
+            overflow: hidden;
         }
 
-        /* Mobile enhancement for better momentum feel */
-        @media (max-width: 768px) {
-            .destinations-scroller {
-                /* More permissive snapping for better throw feel */
-                scroll-snap-type: x proximity; /* Less strict snapping */
-                overscroll-behavior-x: contain; /* Prevent page scroll interference */
-            }
-        }
-
-        /* Hide scrollbars */
-        .destinations-scroller::-webkit-scrollbar {
-            display: none;
-        }
-
-        .destinations-track {
-            display: flex;
-            gap: 2rem;
+        .destinations-swiper .swiper-wrapper {
             padding: 2rem 0;
-            justify-content: flex-start;
-            align-items: stretch;
-
-            /* Remove all JavaScript-related optimizations - let browser handle it */
-            will-change: auto;
-            backface-visibility: visible;
-            -webkit-backface-visibility: visible;
-            user-select: auto;
-            -webkit-user-select: auto;
-            -moz-user-select: auto;
-            -ms-user-select: auto;
-            touch-action: auto;
-            cursor: default;
-            transform: none;
-            -webkit-transform: none;
         }
 
         @media (max-width: 768px) {
-            .destinations-scroller {
+            .destinations-swiper {
                 padding: 0 0.5rem;
             }
 
-            .destinations-track {
-                gap: 1rem;
+            .destinations-swiper .swiper-wrapper {
                 padding: 1rem 0;
-                justify-content: flex-start;
             }
         }
 
-        .scroller-controls {
+        .swiper-controls {
             position: absolute;
             top: 50%;
             left: 0;
@@ -368,13 +326,11 @@
             display: flex;
             justify-content: space-between;
             pointer-events: none;
-            z-index: 20; /* Higher than scroller */
+            z-index: 20;
             padding: 0 1rem;
-            transform: translateY(-50%); /* Proper vertical centering */
-
-            /* Ensure controls don't move with scroll content */
+            transform: translateY(-50%);
             width: 100%;
-            max-width: 1400px; /* Match scroller max-width */
+            max-width: 1400px;
             margin: 0 auto;
         }
 
@@ -434,7 +390,7 @@
         }
 
         .destination-card {
-            min-width: 400px;
+            width: 400px;
             height: 500px;
             position: relative;
             overflow: hidden;
@@ -445,9 +401,6 @@
             user-select: auto;
             pointer-events: auto;
 
-            /* CSS Scroll Snap - Native snap points */
-            scroll-snap-align: center;
-            scroll-snap-stop: always;
 
             /* Remove JavaScript optimizations - let browser handle performance */
             will-change: auto;
@@ -456,17 +409,10 @@
 
         @media (max-width: 768px) {
             .destination-card {
-                min-width: 280px;
+                width: 280px;
                 height: 400px;
-
-                /* CSS Scroll-Snap mobile optimization */
-                scroll-snap-align: start; /* Start alignment works better on mobile */
             }
 
-            /* Enhanced scroll padding for mobile */
-            .destinations-scroller {
-                scroll-padding-left: 0.5rem; /* Account for mobile padding */
-            }
 
             .destination-number {
                 font-size: 3rem;
@@ -1846,13 +1792,13 @@
             <h2 class="section-title">Where Dreams Meet Reality</h2>
         </div>
         
-        <div class="destinations-scroller">
-            <div class="destinations-track" id="destinations-track">
+        <div class="destinations-swiper swiper">
+            <div class="swiper-wrapper" id="destinations-track">
                 <!-- Dynamic content will be generated here by JavaScript -->
             </div>
-            <div class="scroller-controls">
-                <button class="scroll-btn prev" onclick="scrollDestinations(-1)" type="button">‹</button>
-                <button class="scroll-btn next" onclick="scrollDestinations(1)" type="button">›</button>
+            <div class="swiper-controls">
+                <button class="scroll-btn prev swiper-button-prev" type="button">‹</button>
+                <button class="scroll-btn next swiper-button-next" type="button">›</button>
             </div>
         </div>
     </section>
@@ -3279,7 +3225,7 @@
         function createOptimizedCard(location, gradient, index) {
             // Create main card container
             const card = document.createElement('div');
-            card.className = 'destination-card';
+            card.className = 'destination-card swiper-slide';
 
             // Create background
             const bg = document.createElement('div');
@@ -3812,87 +3758,100 @@
             }
         }
 
-        // Hybrid Carousel: CSS Scroll-Snap + Desktop Mouse Drag Enhancement
-        class HybridCarousel {
-            constructor() {
-                this.scroller = document.querySelector('.destinations-scroller');
-                this.isMobile = window.innerWidth <= 768;
-                this.isDragging = false;
-                this.startX = 0;
-                this.scrollLeft = 0;
 
-                if (!this.scroller) return;
+        // Swiper.js Configuration with Mobile Optimization
+        let destinationsSwiper = null;
 
-                // Only add mouse drag for desktop - mobile uses native CSS scroll-snap
-                if (!this.isMobile) {
-                    this.addMouseDragSupport();
+        function initializeSwiper() {
+            // Destroy existing swiper if it exists
+            if (destinationsSwiper) {
+                destinationsSwiper.destroy(true, true);
+            }
+
+            // Initialize Swiper with mobile-optimized settings
+            destinationsSwiper = new Swiper('.destinations-swiper', {
+                // Free mode for natural momentum scrolling
+                freeMode: {
+                    enabled: true,
+                    momentum: true,
+                    momentumRatio: 1,
+                    momentumBounce: false,
+                    momentumBounceRatio: 1,
+                    momentumVelocityRatio: 1,
+                    sticky: false
+                },
+
+                // Hardware acceleration and performance
+                speed: 300,
+                touchEventsTarget: 'wrapper',
+                simulateTouch: true,
+                allowTouchMove: true,
+                touchReleaseOnEdges: false,
+
+                // Responsive slides
+                slidesPerView: 'auto',
+                spaceBetween: 16,
+
+                // Navigation arrows
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+
+                // Mobile and desktop responsive settings
+                breakpoints: {
+                    // Mobile
+                    320: {
+                        spaceBetween: 16,
+                        touchRatio: 1,
+                        threshold: 5,
+                        freeMode: {
+                            enabled: true,
+                            momentum: true,
+                            momentumRatio: 1.2, // Enhanced momentum on mobile
+                            momentumBounce: false
+                        }
+                    },
+                    // Tablet
+                    768: {
+                        spaceBetween: 20,
+                        touchRatio: 1,
+                        threshold: 8
+                    },
+                    // Desktop
+                    1024: {
+                        spaceBetween: 32,
+                        touchRatio: 0.8,
+                        threshold: 10
+                    }
+                },
+
+                // Touch settings for optimal mobile feel
+                touchStartPreventDefault: false,
+                touchStartForcePreventDefault: false,
+                touchMoveStopPropagation: false,
+
+                // Prevent interference with page scrolling
+                preventInteractionOnTransition: false,
+                touchReleaseOnEdges: false,
+                resistanceRatio: 0.85,
+
+                // Event handlers
+                on: {
+                    init: function() {
+                        console.log('✅ Swiper initialized for smooth mobile carousel');
+                    },
+                    touchStart: function() {
+                        // Prevent page scroll interference
+                        document.body.style.touchAction = 'pan-y';
+                    },
+                    touchEnd: function() {
+                        // Restore normal touch behavior
+                        document.body.style.touchAction = 'auto';
+                    }
                 }
-            }
-
-            addMouseDragSupport() {
-                this.scroller.addEventListener('mousedown', (e) => {
-                    this.isDragging = true;
-                    this.startX = e.pageX - this.scroller.offsetLeft;
-                    this.scrollLeft = this.scroller.scrollLeft;
-                    this.scroller.style.cursor = 'grabbing';
-                    this.scroller.style.scrollBehavior = 'auto'; // Disable smooth for dragging
-                    e.preventDefault();
-                });
-
-                this.scroller.addEventListener('mouseleave', () => {
-                    this.isDragging = false;
-                    this.scroller.style.cursor = 'default';
-                    this.scroller.style.scrollBehavior = 'smooth'; // Re-enable smooth
-                });
-
-                this.scroller.addEventListener('mouseup', () => {
-                    this.isDragging = false;
-                    this.scroller.style.cursor = 'grab';
-                    this.scroller.style.scrollBehavior = 'smooth'; // Re-enable smooth
-                });
-
-                this.scroller.addEventListener('mousemove', (e) => {
-                    if (!this.isDragging) return;
-                    e.preventDefault();
-                    const x = e.pageX - this.scroller.offsetLeft;
-                    const walk = (x - this.startX) * 2; // Multiply for faster scrolling
-                    this.scroller.scrollLeft = this.scrollLeft - walk;
-                });
-
-                // Add grab cursor
-                this.scroller.style.cursor = 'grab';
-            }
-        }
-
-        // Initialize hybrid carousel
-        const hybridCarousel = new HybridCarousel();
-
-        // Enhanced navigation with CSS scroll-snap support
-        function scrollDestinations(direction) {
-            const scroller = document.querySelector('.destinations-scroller');
-            if (!scroller) return;
-
-            const cardWidth = window.innerWidth <= 768 ? 280 : 400;
-            const gap = window.innerWidth <= 768 ? 16 : 32;
-            const scrollDistance = cardWidth + gap;
-
-            const currentScroll = scroller.scrollLeft;
-            const targetScroll = currentScroll + (direction * scrollDistance);
-
-            // Use native smooth scrolling with CSS scroll-snap
-            scroller.scrollTo({
-                left: targetScroll,
-                behavior: 'smooth'
             });
         }
-
-        // Hybrid touch support
-        function addTouchSupport() {
-            console.log('✅ Hybrid carousel enabled - CSS scroll-snap + desktop mouse drag');
-        }
-
-        // Make scroll function globally available
-        window.scrollDestinations = scrollDestinations;
 
         // Ensure page starts at top on load
         function scrollToTop() {
@@ -3927,35 +3886,17 @@
 
             generateDestinationCards();
 
-            // Simple initialization
+            // Initialize Swiper after cards are generated
             setTimeout(() => {
-                carousel.init(); // Initialize the simple carousel
-                resetScrollPosition();
-                addTouchSupport();
-                console.log('✅ OptimizedCarousel ready!');
+                initializeSwiper();
+                console.log('✅ Swiper carousel ready!');
             }, 100);
 
-            // Add event listeners to buttons as backup
-            const prevBtn = document.querySelector('.scroll-btn.prev');
-            const nextBtn = document.querySelector('.scroll-btn.next');
+            // Swiper handles navigation automatically through config
 
-            if (prevBtn) {
-                prevBtn.addEventListener('click', () => {
-                    console.log('Previous button clicked');
-                    scrollDestinations(-1);
-                });
-            }
-            if (nextBtn) {
-                nextBtn.addEventListener('click', () => {
-                    console.log('Next button clicked');
-                    scrollDestinations(1);
-                });
-            }
-
-            // Final reset after everything is loaded
+            // Final log after everything is loaded
             setTimeout(() => {
-                resetScrollPosition();
-                console.log('Final reset completed - should be showing destinations 1-3');
+                console.log('✅ Swiper carousel fully initialized');
             }, 500);
 
             setTimeout(initializeMap, 1000);
