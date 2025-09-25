@@ -348,6 +348,26 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            /* GPU optimization */
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        /* Mobile optimization for scroll buttons */
+        @media (max-width: 768px) {
+            .scroll-btn {
+                /* Remove backdrop-filter on mobile for performance */
+                backdrop-filter: none;
+                background: rgba(255, 255, 255, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                transition: all 0.2s ease;
+            }
+
+            .scroll-btn:hover {
+                background: rgba(0, 245, 255, 0.3);
+                border-color: var(--aurora-1);
+                transform: scale(1.05); /* Reduced from 1.1 */
+            }
         }
 
         .scroll-btn:hover {
@@ -456,11 +476,49 @@
             transform: translateY(0);
             transition: transform 0.4s ease;
             backdrop-filter: blur(8px);
+            /* GPU optimization */
+            will-change: transform;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
 
         .destination-card:hover .destination-content {
             transform: translateY(-10px);
             background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.6));
+        }
+
+        /* Mobile performance optimizations - Remove GPU-intensive effects */
+        @media (max-width: 768px) {
+            .destination-content {
+                /* Replace backdrop-filter with solid background for performance */
+                backdrop-filter: none;
+                background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.7));
+                /* Simplify animations */
+                transition: transform 0.2s ease;
+            }
+
+            .destination-card:hover .destination-content {
+                /* Reduce hover effects on mobile for performance */
+                transform: translateY(-5px);
+                background: linear-gradient(to top, rgba(0,0,0,0.98), rgba(0,0,0,0.8));
+            }
+
+            .destination-card {
+                /* Optimize mobile cards */
+                transition: transform 0.3s ease;
+                will-change: auto; /* Remove will-change when not animating */
+            }
+
+            .destination-card:hover {
+                /* Reduce mobile hover effects */
+                transform: scale(1.02);
+                box-shadow: 0 15px 40px rgba(255, 107, 53, 0.2);
+            }
+
+            .destination-card:hover .destination-bg {
+                /* Disable expensive scaling on mobile */
+                transform: none;
+            }
         }
 
         .destination-number {
@@ -526,6 +584,16 @@
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(4px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Mobile optimization for travel-time */
+        @media (max-width: 768px) {
+            .travel-time {
+                /* Remove backdrop-filter on mobile for performance */
+                backdrop-filter: none;
+                background: rgba(255, 255, 255, 0.35);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
         }
 
         /* Interactive Map */
@@ -3110,6 +3178,7 @@
             }
         }
 
+        // Optimized card generation with lazy loading for mobile performance
         function generateDestinationCards() {
             const track = document.getElementById('destinations-track');
             const gradients = [
@@ -3125,59 +3194,164 @@
                 'linear-gradient(135deg, #48cae4, #023e8a)'
             ];
 
-            journeyLocations.forEach((location, index) => {
-                const gradient = gradients[index % gradients.length];
+            const isMobile = window.innerWidth <= 768;
+            const initialLoad = isMobile ? 6 : 10; // Load fewer cards initially on mobile
 
-                const card = document.createElement('div');
-                card.className = 'destination-card';
-                card.innerHTML = `
-                    <div class="destination-bg" style="background: ${gradient};"></div>
-                    <div class="destination-number">${location.id.toString().padStart(2, '0')}</div>
-                    <div class="destination-content">
-                        <h3 class="destination-name">${location.name}</h3>
-                        <p class="destination-state">${location.state}</p>
-                        <p class="destination-description">${location.description}</p>
-                        <div class="visit-date">
-                            📅 ${location.visitDate}
-                        </div>
-                        <div class="destination-details">
-                            ${location.driveTime ? `<span class="travel-time">🚗 ${location.driveTime}</span>` : ''}
-                            ${location.hikeTime ? `<span class="travel-time">🥾 ${location.hikeTime}</span>` : ''}
-                            ${location.flightTime ? `<span class="travel-time">✈️ ${location.flightTime}</span>` : ''}
-                        </div>
-                    </div>
-                `;
-                track.appendChild(card);
-            });
+            // Create initial batch of cards for immediate display
+            const fragment = document.createDocumentFragment();
+
+            for (let i = 0; i < Math.min(initialLoad, journeyLocations.length); i++) {
+                const card = createOptimizedCard(journeyLocations[i], gradients[i % gradients.length], i);
+                fragment.appendChild(card);
+            }
+
+            track.appendChild(fragment);
+
+            // Lazy load remaining cards on mobile, or load all immediately on desktop
+            if (isMobile && journeyLocations.length > initialLoad) {
+                setTimeout(() => {
+                    loadRemainingCards(track, journeyLocations, gradients, initialLoad);
+                }, 500); // Delay to improve initial load performance
+            } else if (!isMobile && journeyLocations.length > initialLoad) {
+                // Load remaining cards immediately on desktop
+                loadRemainingCards(track, journeyLocations, gradients, initialLoad);
+            }
         }
 
-        // Momentum Carousel Implementation (Physics-based with wheel-like behavior)
+        // Optimized card creation using DOM methods instead of innerHTML
+        function createOptimizedCard(location, gradient, index) {
+            // Create main card container
+            const card = document.createElement('div');
+            card.className = 'destination-card';
+
+            // Create background
+            const bg = document.createElement('div');
+            bg.className = 'destination-bg';
+            bg.style.background = gradient;
+            card.appendChild(bg);
+
+            // Create number
+            const number = document.createElement('div');
+            number.className = 'destination-number';
+            number.textContent = location.id.toString().padStart(2, '0');
+            card.appendChild(number);
+
+            // Create content container
+            const content = document.createElement('div');
+            content.className = 'destination-content';
+
+            // Create name
+            const name = document.createElement('h3');
+            name.className = 'destination-name';
+            name.textContent = location.name;
+            content.appendChild(name);
+
+            // Create state
+            const state = document.createElement('p');
+            state.className = 'destination-state';
+            state.textContent = location.state;
+            content.appendChild(state);
+
+            // Create description
+            const description = document.createElement('p');
+            description.className = 'destination-description';
+            description.textContent = location.description;
+            content.appendChild(description);
+
+            // Create visit date
+            const visitDate = document.createElement('div');
+            visitDate.className = 'visit-date';
+            visitDate.textContent = `📅 ${location.visitDate}`;
+            content.appendChild(visitDate);
+
+            // Create details container
+            const details = document.createElement('div');
+            details.className = 'destination-details';
+
+            // Add travel times if they exist
+            const travelTypes = [
+                { time: location.driveTime, icon: '🚗' },
+                { time: location.hikeTime, icon: '🥾' },
+                { time: location.flightTime, icon: '✈️' }
+            ];
+
+            travelTypes.forEach(travel => {
+                if (travel.time) {
+                    const span = document.createElement('span');
+                    span.className = 'travel-time';
+                    span.textContent = `${travel.icon} ${travel.time}`;
+                    details.appendChild(span);
+                }
+            });
+
+            content.appendChild(details);
+            card.appendChild(content);
+
+            return card;
+        }
+
+        // Load remaining cards in batches to prevent blocking
+        function loadRemainingCards(track, locations, gradients, startIndex) {
+            const batchSize = 5; // Process cards in small batches
+            let currentIndex = startIndex;
+
+            function loadBatch() {
+                const fragment = document.createDocumentFragment();
+                const endIndex = Math.min(currentIndex + batchSize, locations.length);
+
+                for (let i = currentIndex; i < endIndex; i++) {
+                    const card = createOptimizedCard(locations[i], gradients[i % gradients.length], i);
+                    fragment.appendChild(card);
+                }
+
+                track.appendChild(fragment);
+                currentIndex = endIndex;
+
+                // Continue loading if there are more cards
+                if (currentIndex < locations.length) {
+                    // Use requestAnimationFrame for smooth loading
+                    requestAnimationFrame(loadBatch);
+                }
+            }
+
+            requestAnimationFrame(loadBatch);
+        }
+
+        // Optimized Carousel Implementation with simplified physics for mobile
         class SimpleCarousel {
             constructor() {
                 this.container = null;
                 this.track = null;
                 this.currentIndex = 0;
                 this.isTransitioning = false;
+                this.isMobile = window.innerWidth <= 768;
 
-                // Enhanced touch state with velocity tracking
+                // Simplified touch state for better mobile performance
                 this.touch = {
                     startX: 0,
                     currentX: 0,
-                    startTime: 0,
-                    endTime: 0,
                     diff: 0,
-                    samples: [] // Track recent drag samples for velocity calculation
+                    isDragging: false
                 };
 
-                // Momentum physics
-                this.momentum = {
-                    velocity: 0,
-                    position: 0,
-                    isActive: false,
-                    friction: 0.95, // Deceleration factor (0.9-0.98 range)
-                    threshold: 0.5, // Minimum velocity to continue momentum
-                    animationId: null
-                };
+                // Simplified momentum for mobile, complex physics for desktop
+                if (this.isMobile) {
+                    // Mobile: Simple snap-to-grid behavior
+                    this.momentum = {
+                        isActive: false,
+                        threshold: 50 // Minimum distance to trigger snap
+                    };
+                } else {
+                    // Desktop: Full momentum physics
+                    this.momentum = {
+                        velocity: 0,
+                        position: 0,
+                        isActive: false,
+                        friction: 0.95,
+                        threshold: 0.5,
+                        animationId: null
+                    };
+                }
 
                 this.init();
             }
@@ -3188,9 +3362,16 @@
 
                 if (!this.track) return;
 
-                // Essential performance styles with smooth easing
-                this.track.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                this.track.style.willChange = 'transform';
+                // Performance optimizations based on device
+                if (this.isMobile) {
+                    // Mobile: Faster transitions, remove will-change when not animating
+                    this.track.style.transition = 'transform 0.3s ease-out';
+                    this.track.style.willChange = 'auto';
+                } else {
+                    // Desktop: Smoother transitions with will-change
+                    this.track.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    this.track.style.willChange = 'transform';
+                }
 
                 this.updatePosition();
                 this.bindEvents();
@@ -3249,65 +3430,98 @@
                 this.goTo(newIndex, true);
             }
 
-            // Touch event handlers with momentum physics
+            // Optimized touch event handlers (simplified for mobile)
             onTouchStart = (e) => {
                 if (this.isTransitioning) return;
 
                 const touch = e.touches ? e.touches[0] : e;
-                const now = Date.now();
 
-                // Stop any active momentum animation
-                if (this.momentum.isActive) {
-                    this.stopMomentum();
+                if (this.isMobile) {
+                    // Mobile: Simple touch tracking
+                    this.touch.startX = touch.clientX;
+                    this.touch.currentX = touch.clientX;
+                    this.touch.isDragging = true;
+
+                    // Disable CSS transition during drag
+                    this.track.style.transition = 'none';
+                } else {
+                    // Desktop: Full momentum physics
+                    const now = Date.now();
+
+                    // Stop any active momentum animation
+                    if (this.momentum.isActive) {
+                        this.stopMomentum();
+                    }
+
+                    // Initialize touch tracking with velocity
+                    this.touch.startX = touch.clientX;
+                    this.touch.currentX = touch.clientX;
+                    this.touch.startTime = now;
+                    this.touch.samples = [{ x: touch.clientX, time: now }];
+
+                    // Get current momentum position
+                    const { slideWidth } = this.getDimensions();
+                    this.momentum.position = -this.currentIndex * slideWidth;
+
+                    // Disable CSS transition during drag
+                    this.track.style.transition = 'none';
+                    this.track.style.cursor = 'grabbing';
                 }
-
-                // Initialize touch tracking
-                this.touch.startX = touch.clientX;
-                this.touch.currentX = touch.clientX;
-                this.touch.startTime = now;
-                this.touch.samples = [{ x: touch.clientX, time: now }]; // Start velocity tracking
-
-                // Get current momentum position
-                const { slideWidth } = this.getDimensions();
-                this.momentum.position = -this.currentIndex * slideWidth;
-
-                // Disable CSS transition during drag
-                this.track.style.transition = 'none';
-                this.track.style.cursor = 'grabbing';
 
                 e.preventDefault();
             }
 
             onTouchMove = (e) => {
-                if (!this.touch.startX) return;
+                if (!this.touch.startX || !this.touch.isDragging) return;
 
                 const touch = e.touches ? e.touches[0] : e;
-                const now = Date.now();
-
                 this.touch.currentX = touch.clientX;
                 this.touch.diff = this.touch.currentX - this.touch.startX;
 
-                // Add sample for velocity tracking (keep last 100ms of samples)
-                this.touch.samples.push({ x: touch.clientX, time: now });
-                this.touch.samples = this.touch.samples.filter(sample => now - sample.time < 100);
+                if (this.isMobile) {
+                    // Mobile: Simplified drag with basic boundary resistance
+                    const { slideWidth, cardsToShow, totalCards } = this.getDimensions();
+                    const currentTranslateX = -this.currentIndex * slideWidth;
+                    const newTranslateX = currentTranslateX + this.touch.diff;
 
-                // Get current position and apply drag
-                const { slideWidth } = this.getDimensions();
-                const newTranslateX = this.momentum.position + this.touch.diff;
+                    // Simple boundary resistance (less computation)
+                    let resistedX = newTranslateX;
+                    const maxTranslateX = -(totalCards - cardsToShow) * slideWidth;
 
-                // Apply some resistance at boundaries
-                let resistedX = newTranslateX;
-                const { cardsToShow, totalCards } = this.getDimensions();
-                const maxTranslateX = -(totalCards - cardsToShow) * slideWidth;
+                    if (newTranslateX > 0) {
+                        resistedX = Math.min(newTranslateX * 0.5, slideWidth * 0.3); // Limited resistance
+                    } else if (newTranslateX < maxTranslateX) {
+                        const excess = newTranslateX - maxTranslateX;
+                        resistedX = maxTranslateX + Math.max(excess * 0.5, -slideWidth * 0.3);
+                    }
 
-                if (newTranslateX > 0) {
-                    resistedX = newTranslateX * 0.3; // Resistance at start
-                } else if (newTranslateX < maxTranslateX) {
-                    const excess = newTranslateX - maxTranslateX;
-                    resistedX = maxTranslateX + (excess * 0.3); // Resistance at end
+                    this.track.style.transform = `translate3d(${resistedX}px, 0, 0)`;
+                } else {
+                    // Desktop: Full momentum physics (existing implementation)
+                    const now = Date.now();
+
+                    // Add sample for velocity tracking (keep last 100ms of samples)
+                    this.touch.samples.push({ x: touch.clientX, time: now });
+                    this.touch.samples = this.touch.samples.filter(sample => now - sample.time < 100);
+
+                    // Get current position and apply drag
+                    const { slideWidth } = this.getDimensions();
+                    const newTranslateX = this.momentum.position + this.touch.diff;
+
+                    // Apply some resistance at boundaries
+                    let resistedX = newTranslateX;
+                    const { cardsToShow, totalCards } = this.getDimensions();
+                    const maxTranslateX = -(totalCards - cardsToShow) * slideWidth;
+
+                    if (newTranslateX > 0) {
+                        resistedX = newTranslateX * 0.3; // Resistance at start
+                    } else if (newTranslateX < maxTranslateX) {
+                        const excess = newTranslateX - maxTranslateX;
+                        resistedX = maxTranslateX + (excess * 0.3); // Resistance at end
+                    }
+
+                    this.track.style.transform = `translate3d(${resistedX}px, 0, 0)`;
                 }
-
-                this.track.style.transform = `translate3d(${resistedX}px, 0, 0)`;
 
                 e.preventDefault();
             }
@@ -3315,47 +3529,66 @@
             onTouchEnd = (e) => {
                 if (!this.touch.startX) return;
 
-                const now = Date.now();
+                if (this.isMobile) {
+                    // Mobile: Simple snap-to-grid behavior
+                    const hasSignificantDrag = Math.abs(this.touch.diff) > this.momentum.threshold;
 
-                // Calculate velocity from recent samples (more accurate than start/end)
-                let velocity = 0;
-                if (this.touch.samples.length >= 2) {
-                    const recentSamples = this.touch.samples.slice(-3); // Use last 3 samples
-                    const firstSample = recentSamples[0];
-                    const lastSample = recentSamples[recentSamples.length - 1];
-                    const timeDiff = lastSample.time - firstSample.time;
-                    const positionDiff = lastSample.x - firstSample.x;
-
-                    if (timeDiff > 0) {
-                        velocity = positionDiff / timeDiff; // pixels per ms
+                    if (hasSignificantDrag) {
+                        // Determine direction and snap to next/previous card
+                        const direction = this.touch.diff > 0 ? -1 : 1;
+                        this.move(direction);
+                    } else {
+                        // Small movement - snap back to current position
+                        this.track.style.transition = 'transform 0.3s ease-out';
+                        this.updatePosition(true);
                     }
-                }
 
-                // Update momentum position to current drag position
-                this.momentum.position += this.touch.diff;
-
-                // Check if we should start momentum animation
-                const minVelocity = 0.3; // Minimum velocity to trigger momentum (pixels/ms)
-                const hasSignificantVelocity = Math.abs(velocity) > minVelocity;
-                const hasSignificantDrag = Math.abs(this.touch.diff) > 20;
-
-                if (hasSignificantVelocity) {
-                    // Start momentum animation with wheel-like physics
-                    this.startMomentum(velocity);
-                } else if (hasSignificantDrag) {
-                    // Medium drag without velocity - snap to nearest card
-                    this.snapToNearestCard(true);
+                    // Reset touch state
+                    this.touch.startX = 0;
+                    this.touch.currentX = 0;
+                    this.touch.diff = 0;
+                    this.touch.isDragging = false;
                 } else {
-                    // Small movement - snap back to current card
-                    this.snapToNearestCard(true);
-                }
+                    // Desktop: Full momentum physics (existing implementation)
+                    const now = Date.now();
 
-                // Reset touch state and cursor
-                this.touch.startX = 0;
-                this.touch.currentX = 0;
-                this.touch.diff = 0;
-                this.touch.samples = [];
-                this.track.style.cursor = 'grab';
+                    // Calculate velocity from recent samples
+                    let velocity = 0;
+                    if (this.touch.samples && this.touch.samples.length >= 2) {
+                        const recentSamples = this.touch.samples.slice(-3);
+                        const firstSample = recentSamples[0];
+                        const lastSample = recentSamples[recentSamples.length - 1];
+                        const timeDiff = lastSample.time - firstSample.time;
+                        const positionDiff = lastSample.x - firstSample.x;
+
+                        if (timeDiff > 0) {
+                            velocity = positionDiff / timeDiff;
+                        }
+                    }
+
+                    // Update momentum position to current drag position
+                    this.momentum.position += this.touch.diff;
+
+                    // Check if we should start momentum animation
+                    const minVelocity = 0.3;
+                    const hasSignificantVelocity = Math.abs(velocity) > minVelocity;
+                    const hasSignificantDrag = Math.abs(this.touch.diff) > 20;
+
+                    if (hasSignificantVelocity) {
+                        this.startMomentum(velocity);
+                    } else if (hasSignificantDrag) {
+                        this.snapToNearestCard(true);
+                    } else {
+                        this.snapToNearestCard(true);
+                    }
+
+                    // Reset touch state and cursor
+                    this.touch.startX = 0;
+                    this.touch.currentX = 0;
+                    this.touch.diff = 0;
+                    this.touch.samples = [];
+                    this.track.style.cursor = 'grab';
+                }
             }
 
             // Momentum physics methods
