@@ -778,15 +778,54 @@
                 border-radius: 20px;
             }
 
-            /* Mobile map controls */
+            /* Mobile map controls - 2x2 grid layout */
             .map-controls {
                 bottom: 15px;
-                gap: 5px;
+                gap: 8px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+                width: auto;
+                max-width: 280px;
+                transform: translateX(-50%);
             }
 
             .map-control-btn {
-                padding: 8px 12px;
-                font-size: 0.8rem;
+                padding: 10px 6px;
+                font-size: 0.75rem;
+                white-space: nowrap;
+                min-width: 0;
+                flex: 1;
+                text-align: center;
+            }
+
+            /* Shorter button labels for mobile 2x2 grid */
+            .map-control-btn {
+                position: relative;
+            }
+
+            .map-control-btn:nth-child(2) { /* Current Location -> Current */
+                text-indent: -9999px; /* Hide original text */
+            }
+            .map-control-btn:nth-child(2)::before {
+                content: "Current";
+                position: absolute;
+                left: 0;
+                right: 0;
+                text-indent: 0;
+                font-size: 0.75rem;
+            }
+
+            .map-control-btn:nth-child(3) { /* Previous Day -> Previous */
+                text-indent: -9999px; /* Hide original text */
+            }
+            .map-control-btn:nth-child(3)::before {
+                content: "Previous";
+                position: absolute;
+                left: 0;
+                right: 0;
+                text-indent: 0;
+                font-size: 0.75rem;
             }
 
             /* Mobile gallery header */
