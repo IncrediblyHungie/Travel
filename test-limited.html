@@ -14,8 +14,8 @@
 <body>
     <h1>Limited View Test</h1>
     <p>Check browser console for filtering results</p>
-    <p>Expected: Should show next 3 days from September 25, 2025</p>
-    <p>Should include: Maine (Sept 26), New Hampshire (Sept 27), Vermont (Sept 28)</p>
+    <p>Expected: Should show today + next 3 days from September 25, 2025</p>
+    <p>Should include: TODAY (Sept 25) + Maine (Sept 26), New Hampshire (Sept 27), Vermont (Sept 28)</p>
 
     <script>
         // Parse visit date function (copied from main script)
@@ -41,18 +41,26 @@
             console.log(`${dateStr} -> ${parsed.toDateString()}`);
         });
 
-        // Test filtering with override date
+        // Test filtering with override date (today + next 3 days)
         const today = new Date('2025-09-25');
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
+        const startDate = new Date(today); // Include today (starting point)
         const endDate = new Date(today);
-        endDate.setDate(today.getDate() + 3);
+        endDate.setDate(today.getDate() + 3); // Today + next 3 days
 
-        console.log(`\nTesting range: ${tomorrow.toDateString()} to ${endDate.toDateString()}`);
+        console.log(`\nTesting range: ${startDate.toDateString()} to ${endDate.toDateString()}`);
 
-        testDates.forEach(dateStr => {
+        // Add September 25 to test dates to see if today is included
+        const allTestDates = [
+            "September 25, 2025", // TODAY - should be included as starting point
+            "September 26, 2025",
+            "September 27, 2025",
+            "September 28, 2025",
+            "September 29, 2025"  // Should be excluded (day 4)
+        ];
+
+        allTestDates.forEach(dateStr => {
             const visitDate = parseVisitDate(dateStr);
-            const isInRange = visitDate >= tomorrow && visitDate <= endDate;
+            const isInRange = visitDate >= startDate && visitDate <= endDate;
             console.log(`${dateStr}: ${isInRange ? '✅ INCLUDED' : '❌ EXCLUDED'}`);
         });
     </script>

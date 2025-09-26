@@ -639,15 +639,14 @@
             return new Date();
         }
 
-        function isWithinNextDays(visitDate, daysFromToday = DAYS_TO_SHOW) {
+        function isWithinTodayAndNextDays(visitDate, daysFromToday = DAYS_TO_SHOW) {
             const today = getToday();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(today.getDate() + 1);
+            const startDate = new Date(today); // Include today (starting point)
 
             const endDate = new Date(today);
-            endDate.setDate(today.getDate() + daysFromToday);
+            endDate.setDate(today.getDate() + daysFromToday); // Today + next 3 days
 
-            return visitDate >= tomorrow && visitDate <= endDate;
+            return visitDate >= startDate && visitDate <= endDate;
         }
 
         function getFilteredLocations() {
@@ -657,11 +656,11 @@
             }
 
             const today = getToday();
-            console.log(`Filtering destinations for next ${DAYS_TO_SHOW} days from:`, today.toDateString());
+            console.log(`Filtering destinations for today + next ${DAYS_TO_SHOW} days from:`, today.toDateString());
 
             const filtered = journeyLocations.filter(location => {
                 const visitDate = parseVisitDate(location.visitDate);
-                const isInRange = isWithinNextDays(visitDate);
+                const isInRange = isWithinTodayAndNextDays(visitDate);
 
                 if (isInRange) {
                     console.log(`✅ Including: ${location.state} - ${location.name} (${location.visitDate})`);
@@ -673,11 +672,11 @@
             });
 
             if (filtered.length === 0) {
-                console.log('⚠️ No destinations found for the next few days - showing first 3 destinations as fallback');
-                return journeyLocations.slice(0, 3);
+                console.log('⚠️ No destinations found for today + next few days - showing first 4 destinations as fallback');
+                return journeyLocations.slice(0, 4);
             }
 
-            console.log(`📍 Showing ${filtered.length} destinations for the next ${DAYS_TO_SHOW} days`);
+            console.log(`📍 Showing ${filtered.length} destinations (today + next ${DAYS_TO_SHOW} days)`);
             return filtered;
         }
 
@@ -685,13 +684,29 @@
         const workingLocations = getFilteredLocations();
         console.log('🎯 Working with', workingLocations.length, 'destinations');
 
-        // Update current journey day to work with filtered data
+        // Display configuration info
+        if (ENABLE_LIMITED_VIEW) {
+            console.log(`📅 LIMITED VIEW ENABLED:`);
+            console.log(`   • Showing: Today + next ${DAYS_TO_SHOW} days`);
+            console.log(`   • Reference date: ${getToday().toDateString()}`);
+            console.log(`   • Total markers: ${workingLocations.length}`);
+            console.log(`   • Starting at marker #1 (today's location)`);
+            if (START_DATE_OVERRIDE) {
+                console.log(`   • ⚠️ Date override active: ${START_DATE_OVERRIDE}`);
+            }
+        } else {
+            console.log('🌍 FULL VIEW - All 50 destinations visible');
+        }
+
+        // Track current journey day within filtered data
+        let filteredCurrentDay = 1; // Start at first filtered location
+
         const getAdjustedCurrentDay = () => {
             if (!ENABLE_LIMITED_VIEW) {
                 return currentJourneyDay;
             }
-            // For limited view, always start at the first available destination
-            return 1;
+            // Return current position within filtered dataset (1-4)
+            return filteredCurrentDay;
         };
 
         // Initialize Mapbox map
@@ -1100,7 +1115,7 @@
         }
 
         function addJourneyRoute() {
-            console.log('Drawing journey routes...');
+            console.log('Drawing filtered journey routes...');
 
             // Remove existing route layers
             ['completed-route-line', 'current-route-line', 'future-route-line'].forEach(layerId => {
@@ -1110,39 +1125,39 @@
                 if (map.getSource(sourceId)) map.removeSource(sourceId);
             });
 
-            // Helper function to get route coordinates (cached or fallback to straight line)
+            if (workingLocations.length < 2) {
+                console.log('Not enough locations for route drawing');
+                return;
+            }
+
+            // Helper function to get route coordinates for filtered locations
             function getRouteCoordinates(startLocation, endLocation) {
                 const routeId = `${startLocation.id}-${endLocation.id}`;
 
-                // Force straight lines for flight segments: CA to Alaska and Alaska to Hawaii
-                const isFlightSegment = (
-                    (startLocation.id === 48 && endLocation.id === 49) || // Hawk Hill, CA to Alaska
-                    (startLocation.id === 49 && endLocation.id === 50)    // Alaska to Hawaii
-                );
-
-                if (isFlightSegment) {
-                    // Always use straight line for flights
-                    return [startLocation.coordinates, endLocation.coordinates];
-                }
-
+                // Check if we have cached route data
                 if (routeCache[routeId] && routeCache[routeId].coordinates) {
                     return routeCache[routeId].coordinates;
                 }
-                // Fallback to straight line for other routes if no cached route
+                // Fallback to straight line
                 return [startLocation.coordinates, endLocation.coordinates];
             }
 
-            // Add completed routes
-            if (currentJourneyDay > 1) {
+            const adjustedCurrentDay = getAdjustedCurrentDay();
+            console.log(`Current filtered day: ${adjustedCurrentDay}/${workingLocations.length}`);
+
+            // Add completed routes (in filtered dataset)
+            if (adjustedCurrentDay > 1) {
                 let allCompletedCoordinates = [];
 
-                for (let i = 0; i < currentJourneyDay - 1; i++) {
-                    const start = journeyLocations[i];
-                    const end = journeyLocations[i + 1];
-                    const routeCoords = getRouteCoordinates(start, end);
+                for (let i = 0; i < adjustedCurrentDay - 1; i++) {
+                    if (i + 1 < workingLocations.length) {
+                        const start = workingLocations[i];
+                        const end = workingLocations[i + 1];
+                        const routeCoords = getRouteCoordinates(start, end);
 
-                    // Add all coordinates from this route segment
-                    allCompletedCoordinates = allCompletedCoordinates.concat(routeCoords);
+                        // Add all coordinates from this route segment
+                        allCompletedCoordinates = allCompletedCoordinates.concat(routeCoords);
+                    }
                 }
 
                 if (allCompletedCoordinates.length > 0) {
@@ -1177,49 +1192,54 @@
                 }
             }
 
-            // Add current route segment (if not at first location)
-            if (currentJourneyDay > 1 && currentJourneyDay <= journeyLocations.length) {
-                const prevLocation = journeyLocations[currentJourneyDay - 2];
-                const currentLocation = journeyLocations[currentJourneyDay - 1];
-                const currentRouteCoords = getRouteCoordinates(prevLocation, currentLocation);
+            // Add current route segment (if not at first location and has next location)
+            if (adjustedCurrentDay > 1 && adjustedCurrentDay <= workingLocations.length) {
+                const prevIndex = adjustedCurrentDay - 2;
+                const currentIndex = adjustedCurrentDay - 1;
 
-                console.log(`Adding current route with ${currentRouteCoords.length} coordinates`);
+                if (prevIndex >= 0 && currentIndex < workingLocations.length) {
+                    const prevLocation = workingLocations[prevIndex];
+                    const currentLocation = workingLocations[currentIndex];
+                    const currentRouteCoords = getRouteCoordinates(prevLocation, currentLocation);
 
-                map.addSource('current-route', {
-                    type: 'geojson',
-                    data: {
-                        type: 'Feature',
-                        properties: {},
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: currentRouteCoords
+                    console.log(`Adding current route with ${currentRouteCoords.length} coordinates`);
+
+                    map.addSource('current-route', {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: currentRouteCoords
+                            }
                         }
-                    }
-                });
+                    });
 
-                map.addLayer({
-                    id: 'current-route-line',
-                    type: 'line',
-                    source: 'current-route',
-                    layout: {
-                        'line-join': 'round',
-                        'line-cap': 'round'
-                    },
-                    paint: {
-                        'line-color': '#FFD700',
-                        'line-width': 5,
-                        'line-opacity': 0.9
-                    }
-                });
+                    map.addLayer({
+                        id: 'current-route-line',
+                        type: 'line',
+                        source: 'current-route',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': '#FFD700',
+                            'line-width': 5,
+                            'line-opacity': 0.9
+                        }
+                    });
+                }
             }
 
-            // Add future routes
-            if (currentJourneyDay < journeyLocations.length) {
+            // Add future routes (in filtered dataset)
+            if (adjustedCurrentDay < workingLocations.length) {
                 let allFutureCoordinates = [];
 
-                for (let i = currentJourneyDay - 1; i < journeyLocations.length - 1; i++) {
-                    const start = journeyLocations[i];
-                    const end = journeyLocations[i + 1];
+                for (let i = adjustedCurrentDay - 1; i < workingLocations.length - 1; i++) {
+                    const start = workingLocations[i];
+                    const end = workingLocations[i + 1];
                     const routeCoords = getRouteCoordinates(start, end);
 
                     // Add all coordinates from this route segment
@@ -1258,7 +1278,7 @@
                 }
             }
 
-            console.log('Journey routes drawing completed');
+            console.log('Filtered journey routes drawing completed');
         }
 
         function fitMapToJourney() {
@@ -1289,7 +1309,12 @@
                 return;
             }
 
-            currentJourneyDay = newCurrentDay;
+            if (ENABLE_LIMITED_VIEW) {
+                filteredCurrentDay = newCurrentDay;
+                console.log(`Updated filtered current day to: ${filteredCurrentDay}/${workingLocations.length}`);
+            } else {
+                currentJourneyDay = newCurrentDay;
+            }
 
             // Clear any mobile popup reference when navigating
             if (currentMobilePopup) {
@@ -1322,14 +1347,16 @@
         }
 
         function nextDay() {
-            const newDay = currentJourneyDay < workingLocations.length ? currentJourneyDay + 1 : 1;
-            console.log(`Moving to next day: ${newDay}`);
+            const currentDay = getAdjustedCurrentDay();
+            const newDay = currentDay < workingLocations.length ? currentDay + 1 : 1;
+            console.log(`Moving to next day: ${newDay} (from ${currentDay})`);
             updateJourneyProgress(newDay);
         }
 
         function previousDay() {
-            const newDay = currentJourneyDay > 1 ? currentJourneyDay - 1 : workingLocations.length;
-            console.log(`Moving to previous day: ${newDay}`);
+            const currentDay = getAdjustedCurrentDay();
+            const newDay = currentDay > 1 ? currentDay - 1 : workingLocations.length;
+            console.log(`Moving to previous day: ${newDay} (from ${currentDay})`);
             updateJourneyProgress(newDay);
         }
 
@@ -1341,7 +1368,7 @@
             nextDay: nextDay,
             previousDay: previousDay,
             locations: workingLocations,
-            getCurrentDay: () => currentJourneyDay
+            getCurrentDay: () => getAdjustedCurrentDay()
         };
 
         // Destinations Scroller Functionality
