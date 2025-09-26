@@ -180,7 +180,7 @@
         }
 
         .nav-card {
-            padding: 1.5rem 2.5rem;
+            padding: 1rem 2.5rem;
             background: var(--glass);
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
