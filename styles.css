@@ -723,7 +723,7 @@
 
         /* Experience Section */
         .experience {
-            padding: 8rem 2rem;
+            padding: 8rem 2rem 6rem 2rem;
             background: linear-gradient(180deg, var(--primary-bg), var(--coral-warm));
             text-align: center;
         }
@@ -788,7 +788,9 @@
 
         /* CTA Section */
         .final-cta {
-            height: 100vh;
+            min-height: 100vh;
+            padding: 4rem 2rem;
+            margin-top: 2rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -960,6 +962,22 @@
             .hero {
                 min-height: max(100vh, 600px);
                 padding: clamp(1.5rem, 4vw, 3rem) 1rem;
+            }
+
+            /* Extra small screens - ensure no overlap */
+            .experience {
+                padding: 3rem 1rem 2rem 1rem;
+            }
+
+            .final-cta {
+                min-height: 80vh;
+                padding: 2rem 1rem;
+                margin-top: 2rem;
+            }
+
+            .cta-title {
+                font-size: clamp(1.5rem, 10vw, 3rem);
+                margin-bottom: 1.5rem;
             }
         }
 
@@ -1449,6 +1467,23 @@
             .nav-cards {
                 flex-direction: column;
                 gap: 1rem;
+            }
+
+            /* Mobile experience section - reduce padding */
+            .experience {
+                padding: 4rem 1rem 3rem 1rem;
+            }
+
+            /* Mobile final CTA section */
+            .final-cta {
+                min-height: 100vh;
+                padding: 3rem 1rem;
+                margin-top: 1rem;
+            }
+
+            .cta-title {
+                font-size: clamp(2rem, 8vw, 4rem);
+                margin-bottom: 2rem;
             }
 
             /* Mobile social buttons */
