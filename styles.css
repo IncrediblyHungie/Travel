@@ -146,6 +146,30 @@
 
 
 
+        /* Tagline under cropped logo */
+        .tagline {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            color: var(--text-medium);
+            opacity: 0.9;
+            text-align: center;
+            margin: 0 0 2.5rem 0;
+            padding: 0 2rem;
+            letter-spacing: 0.15em;
+            line-height: 1.3;
+            position: relative;
+            z-index: 10;
+            animation: fadeIn 2s ease 0.7s both;
+        }
+
+        @media (max-width: 768px) {
+            .tagline {
+                font-size: clamp(0.85rem, 3.5vw, 1.1rem);
+                margin: 0 0 2rem 0;
+                padding: 0 1rem;
+                letter-spacing: 0.1em;
+            }
+        }
+
         @media (max-width: 600px) {
             /* Ensure "Infinite Memories" stays together on iPhone */
             .no-break {
