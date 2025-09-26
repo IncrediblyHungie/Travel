@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Limited View</title>
+    <script>
+        // Environment variables for testing
+        window.DAYS_TO_SHOW = 3; // Show next 3 days
+        window.START_DATE_OVERRIDE = '2025-09-25'; // Test with September 25, 2025
+        window.ENABLE_LIMITED_VIEW = true; // Enable limited view
+    </script>
+</head>
+<body>
+    <h1>Limited View Test</h1>
+    <p>Check browser console for filtering results</p>
+    <p>Expected: Should show next 3 days from September 25, 2025</p>
+    <p>Should include: Maine (Sept 26), New Hampshire (Sept 27), Vermont (Sept 28)</p>
+
+    <script>
+        // Parse visit date function (copied from main script)
+        function parseVisitDate(visitDateString) {
+            const [month, day, year] = visitDateString.replace(',', '').split(' ');
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthIndex = monthNames.indexOf(month);
+            return new Date(parseInt(year), monthIndex, parseInt(day));
+        }
+
+        // Test the date parsing
+        const testDates = [
+            "September 26, 2025",
+            "September 27, 2025",
+            "September 28, 2025",
+            "September 29, 2025"
+        ];
+
+        console.log('Testing date parsing:');
+        testDates.forEach(dateStr => {
+            const parsed = parseVisitDate(dateStr);
+            console.log(`${dateStr} -> ${parsed.toDateString()}`);
+        });
+
+        // Test filtering with override date
+        const today = new Date('2025-09-25');
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        const endDate = new Date(today);
+        endDate.setDate(today.getDate() + 3);
+
+        console.log(`\nTesting range: ${tomorrow.toDateString()} to ${endDate.toDateString()}`);
+
+        testDates.forEach(dateStr => {
+            const visitDate = parseVisitDate(dateStr);
+            const isInRange = visitDate >= tomorrow && visitDate <= endDate;
+            console.log(`${dateStr}: ${isInRange ? '✅ INCLUDED' : '❌ EXCLUDED'}`);
+        });
+    </script>
+</body>
+</html>

@@ -617,6 +617,83 @@
             }
         ];
 
+        // Environment variable support for Netlify configuration
+        const DAYS_TO_SHOW = parseInt(window.DAYS_TO_SHOW || 3); // Default: 3 days
+        const START_DATE_OVERRIDE = window.START_DATE_OVERRIDE || null; // Format: "2025-09-26"
+        const ENABLE_LIMITED_VIEW = window.ENABLE_LIMITED_VIEW !== 'false'; // Default: true
+
+        // Date filtering logic
+        function parseVisitDate(visitDateString) {
+            // Convert "September 26, 2025" to Date object
+            const [month, day, year] = visitDateString.replace(',', '').split(' ');
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthIndex = monthNames.indexOf(month);
+            return new Date(parseInt(year), monthIndex, parseInt(day));
+        }
+
+        function getToday() {
+            if (START_DATE_OVERRIDE) {
+                return new Date(START_DATE_OVERRIDE);
+            }
+            return new Date();
+        }
+
+        function isWithinNextDays(visitDate, daysFromToday = DAYS_TO_SHOW) {
+            const today = getToday();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+
+            const endDate = new Date(today);
+            endDate.setDate(today.getDate() + daysFromToday);
+
+            return visitDate >= tomorrow && visitDate <= endDate;
+        }
+
+        function getFilteredLocations() {
+            if (!ENABLE_LIMITED_VIEW) {
+                console.log('Limited view disabled - showing all destinations');
+                return journeyLocations;
+            }
+
+            const today = getToday();
+            console.log(`Filtering destinations for next ${DAYS_TO_SHOW} days from:`, today.toDateString());
+
+            const filtered = journeyLocations.filter(location => {
+                const visitDate = parseVisitDate(location.visitDate);
+                const isInRange = isWithinNextDays(visitDate);
+
+                if (isInRange) {
+                    console.log(`✅ Including: ${location.state} - ${location.name} (${location.visitDate})`);
+                } else {
+                    console.log(`❌ Excluding: ${location.state} - ${location.name} (${location.visitDate})`);
+                }
+
+                return isInRange;
+            });
+
+            if (filtered.length === 0) {
+                console.log('⚠️ No destinations found for the next few days - showing first 3 destinations as fallback');
+                return journeyLocations.slice(0, 3);
+            }
+
+            console.log(`📍 Showing ${filtered.length} destinations for the next ${DAYS_TO_SHOW} days`);
+            return filtered;
+        }
+
+        // Get current working dataset
+        const workingLocations = getFilteredLocations();
+        console.log('🎯 Working with', workingLocations.length, 'destinations');
+
+        // Update current journey day to work with filtered data
+        const getAdjustedCurrentDay = () => {
+            if (!ENABLE_LIMITED_VIEW) {
+                return currentJourneyDay;
+            }
+            // For limited view, always start at the first available destination
+            return 1;
+        };
+
         // Initialize Mapbox map
         let map;
 
@@ -697,14 +774,17 @@
         let markerInstances = [];
 
         function addJourneyMarkers() {
-            journeyLocations.forEach(location => {
+            workingLocations.forEach((location, index) => {
                 let markerStatus = '';
                 let markerColor = '#666666';
 
-                if (location.id < currentJourneyDay) {
+                const adjustedCurrentDay = getAdjustedCurrentDay();
+                const markerIndex = index + 1; // 1-based index for filtered locations
+
+                if (markerIndex < adjustedCurrentDay) {
                     markerStatus = 'completed';
                     markerColor = '#8E24AA';
-                } else if (location.id === currentJourneyDay) {
+                } else if (markerIndex === adjustedCurrentDay) {
                     markerStatus = 'current';
                     markerColor = '#FFD700';
                 } else {
@@ -816,7 +896,7 @@
                         text-shadow: ${markerStatus === 'future' ? '0 1px 2px rgba(0, 0, 0, 0.5)' : '0 1px 2px rgba(255, 255, 255, 0.5)'};
                     `;
 
-                    markerEl.textContent = location.id.toString();
+                    markerEl.textContent = markerIndex.toString();
 
                     // Create marker with anchor: 'center' to ensure precise positioning
                     const marker = new mapboxgl.Marker({
@@ -898,20 +978,25 @@
                 }
             });
 
-            console.log(`Added ${journeyLocations.length} markers to the map`);
+            console.log(`Added ${workingLocations.length} markers to the map`);
 
             // Log a few specific locations to verify
-            console.log('Verifying key locations:');
-            console.log('Maine (1):', journeyLocations[0].coordinates);
-            console.log('Texas (34):', journeyLocations[33].coordinates);
-            console.log('California (48):', journeyLocations[47].coordinates);
-            console.log('Hawaii (50):', journeyLocations[49].coordinates);
+            console.log('Verifying filtered locations:');
+            if (workingLocations.length > 0) {
+                console.log('First location:', workingLocations[0].state, workingLocations[0].coordinates);
+            }
+            if (workingLocations.length > 1) {
+                console.log('Second location:', workingLocations[1].state, workingLocations[1].coordinates);
+            }
+            if (workingLocations.length > 2) {
+                console.log('Third location:', workingLocations[2].state, workingLocations[2].coordinates);
+            }
         }
 
         // Store route geometries for better performance
         let routeCache = {};
         let routesLoaded = 0;
-        const totalRoutes = journeyLocations.length - 1;
+        const totalRoutes = workingLocations.length - 1;
 
         // Simple straight-line route as immediate fallback
         function addSimpleRoute() {
@@ -925,8 +1010,8 @@
                 if (map.getSource(sourceId)) map.removeSource(sourceId);
             });
 
-            // Always show the full journey route for now
-            const allCoordinates = journeyLocations.map(location => location.coordinates);
+            // Always show the full journey route for filtered locations
+            const allCoordinates = workingLocations.map(location => location.coordinates);
 
             map.addSource('future-route', {
                 type: 'geojson',
@@ -988,11 +1073,11 @@
         }
 
         async function loadAllRoutes() {
-            console.log('Loading road routes for all destinations...');
+            console.log('Loading road routes for filtered destinations...');
 
-            for (let i = 0; i < journeyLocations.length - 1; i++) {
-                const start = journeyLocations[i];
-                const end = journeyLocations[i + 1];
+            for (let i = 0; i < workingLocations.length - 1; i++) {
+                const start = workingLocations[i];
+                const end = workingLocations[i + 1];
                 const routeId = `${start.id}-${end.id}`;
 
                 const geometry = await getRouteGeometry(start.coordinates, end.coordinates, routeId);
@@ -1178,7 +1263,7 @@
 
         function fitMapToJourney() {
             if (!map) return;
-            const coordinates = journeyLocations.map(location => location.coordinates);
+            const coordinates = workingLocations.map(location => location.coordinates);
             const bounds = coordinates.reduce(function (bounds, coord) {
                 return bounds.extend(coord);
             }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
@@ -1189,8 +1274,9 @@
         }
 
         function centerOnCurrentLocation() {
-            if (!map || currentJourneyDay < 1 || currentJourneyDay > journeyLocations.length) return;
-            const currentLocation = journeyLocations[currentJourneyDay - 1];
+            const adjustedCurrentDay = getAdjustedCurrentDay();
+            if (!map || adjustedCurrentDay < 1 || adjustedCurrentDay > workingLocations.length) return;
+            const currentLocation = workingLocations[adjustedCurrentDay - 1];
             map.flyTo({
                 center: currentLocation.coordinates,
                 zoom: 6,
@@ -1199,7 +1285,7 @@
         }
 
         function updateJourneyProgress(newCurrentDay) {
-            if (newCurrentDay < 1 || newCurrentDay > journeyLocations.length) {
+            if (newCurrentDay < 1 || newCurrentDay > workingLocations.length) {
                 return;
             }
 
@@ -1236,13 +1322,13 @@
         }
 
         function nextDay() {
-            const newDay = currentJourneyDay < journeyLocations.length ? currentJourneyDay + 1 : 1;
+            const newDay = currentJourneyDay < workingLocations.length ? currentJourneyDay + 1 : 1;
             console.log(`Moving to next day: ${newDay}`);
             updateJourneyProgress(newDay);
         }
 
         function previousDay() {
-            const newDay = currentJourneyDay > 1 ? currentJourneyDay - 1 : journeyLocations.length;
+            const newDay = currentJourneyDay > 1 ? currentJourneyDay - 1 : workingLocations.length;
             console.log(`Moving to previous day: ${newDay}`);
             updateJourneyProgress(newDay);
         }
@@ -1254,7 +1340,7 @@
             updateProgress: updateJourneyProgress,
             nextDay: nextDay,
             previousDay: previousDay,
-            locations: journeyLocations,
+            locations: workingLocations,
             getCurrentDay: () => currentJourneyDay
         };
 
@@ -1287,25 +1373,25 @@
             ];
 
             const isMobile = window.innerWidth <= 768;
-            const initialLoad = isMobile ? 25 : 20; // Load most/all cards initially on mobile for instant response
+            const initialLoad = isMobile ? Math.min(25, workingLocations.length) : Math.min(20, workingLocations.length); // Load most/all cards initially on mobile for instant response
 
             // Create initial batch of cards for immediate display
             const fragment = document.createDocumentFragment();
 
-            for (let i = 0; i < Math.min(initialLoad, journeyLocations.length); i++) {
-                const card = createOptimizedCard(journeyLocations[i], gradients[i % gradients.length], i);
+            for (let i = 0; i < Math.min(initialLoad, workingLocations.length); i++) {
+                const card = createOptimizedCard(workingLocations[i], gradients[i % gradients.length], i);
                 fragment.appendChild(card);
             }
 
             track.appendChild(fragment);
 
             // Load remaining cards immediately on mobile for instant numbers
-            if (isMobile && journeyLocations.length > initialLoad) {
+            if (isMobile && workingLocations.length > initialLoad) {
                 // Load remaining cards immediately for instant response
-                loadRemainingCards(track, journeyLocations, gradients, initialLoad);
-            } else if (!isMobile && journeyLocations.length > initialLoad) {
+                loadRemainingCards(track, workingLocations, gradients, initialLoad);
+            } else if (!isMobile && workingLocations.length > initialLoad) {
                 // Load remaining cards immediately on desktop
-                loadRemainingCards(track, journeyLocations, gradients, initialLoad);
+                loadRemainingCards(track, workingLocations, gradients, initialLoad);
             }
         }
 
@@ -1324,7 +1410,7 @@
             // Create number
             const number = document.createElement('div');
             number.className = 'destination-number';
-            number.textContent = location.id.toString().padStart(2, '0');
+            number.textContent = (index + 1).toString().padStart(2, '0');
             card.appendChild(number);
 
             // Create content container
@@ -1486,7 +1572,7 @@
                     gap,
                     slideWidth: cardWidth + gap,
                     cardsToShow: isMobile ? 1 : 3,
-                    totalCards: this.track ? this.track.children.length : 0
+                    totalCards: workingLocations.length
                 };
             }
 
