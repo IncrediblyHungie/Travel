@@ -145,29 +145,6 @@
         }
 
 
-        /* Tagline - Simple and consistent across all devices */
-        .tagline {
-            font-size: clamp(0.9rem, 2vw, 1.2rem);
-            color: var(--text-medium);
-            opacity: 0.85;
-            text-align: center;
-            margin: 0 0 2rem 0;
-            padding: 0 1rem;
-            letter-spacing: 0.1em;
-            line-height: 1.4;
-            position: relative;
-            z-index: 10;
-            animation: fadeIn 2s ease 0.5s both;
-        }
-
-        /* Mobile tagline adjustments */
-        @media (max-width: 768px) {
-            .tagline {
-                font-size: clamp(0.8rem, 3vw, 1rem);
-                margin: 0 0 1.5rem 0;
-                letter-spacing: 0.05em;
-            }
-        }
 
         @media (max-width: 600px) {
             /* Ensure "Infinite Memories" stays together on iPhone */
