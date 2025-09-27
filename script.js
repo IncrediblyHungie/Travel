@@ -619,7 +619,7 @@
 
         // Environment variable support for Netlify configuration
         const DAYS_TO_SHOW = parseInt(window.DAYS_TO_SHOW || 3); // Default: 3 days
-        const START_DATE_OVERRIDE = window.START_DATE_OVERRIDE || '2025-09-29'; // Default: September 29, 2025
+        const START_DATE_OVERRIDE = window.START_DATE_OVERRIDE || '2025-09-26'; // Default: September 26, 2025 (journey beginning)
         const ENABLE_LIMITED_VIEW = window.ENABLE_LIMITED_VIEW !== 'false'; // Default: true
 
         // Date filtering logic
