@@ -619,7 +619,7 @@
 
         // Environment variable support for Netlify configuration
         const DAYS_TO_SHOW = parseInt(window.DAYS_TO_SHOW || 3); // Default: 3 days
-        const START_DATE_OVERRIDE = window.START_DATE_OVERRIDE || null; // Format: "2025-09-26"
+        const START_DATE_OVERRIDE = window.START_DATE_OVERRIDE || '2025-09-29'; // Default: September 29, 2025
         const ENABLE_LIMITED_VIEW = window.ENABLE_LIMITED_VIEW !== 'false'; // Default: true
 
         // Date filtering logic
@@ -632,19 +632,17 @@
             return new Date(parseInt(year), monthIndex, parseInt(day));
         }
 
-        function getToday() {
-            if (START_DATE_OVERRIDE) {
-                return new Date(START_DATE_OVERRIDE);
-            }
-            return new Date();
+        function getJourneyStartDate() {
+            // Always use the fixed start date for consistent experience
+            return new Date(START_DATE_OVERRIDE);
         }
 
-        function isWithinTodayAndNextDays(visitDate, daysFromToday = DAYS_TO_SHOW) {
-            const today = getToday();
-            const startDate = new Date(today); // Include today (starting point)
+        function isWithinJourneyWindow(visitDate, daysFromStart = DAYS_TO_SHOW) {
+            const journeyStart = getJourneyStartDate();
+            const startDate = new Date(journeyStart); // Journey starting point
 
-            const endDate = new Date(today);
-            endDate.setDate(today.getDate() + daysFromToday); // Today + next 3 days
+            const endDate = new Date(journeyStart);
+            endDate.setDate(journeyStart.getDate() + daysFromStart); // Start + next 3 days
 
             return visitDate >= startDate && visitDate <= endDate;
         }
@@ -655,12 +653,13 @@
                 return journeyLocations;
             }
 
-            const today = getToday();
-            console.log(`Filtering destinations for today + next ${DAYS_TO_SHOW} days from:`, today.toDateString());
+            const journeyStart = getJourneyStartDate();
+            console.log(`Filtering destinations from fixed start date: ${journeyStart.toDateString()}`);
+            console.log(`Showing next ${DAYS_TO_SHOW + 1} days from start date (${DAYS_TO_SHOW + 1} total destinations)`);
 
             const filtered = journeyLocations.filter(location => {
                 const visitDate = parseVisitDate(location.visitDate);
-                const isInRange = isWithinTodayAndNextDays(visitDate);
+                const isInRange = isWithinJourneyWindow(visitDate);
 
                 if (isInRange) {
                     console.log(`✅ Including: ${location.state} - ${location.name} (${location.visitDate})`);
@@ -672,11 +671,11 @@
             });
 
             if (filtered.length === 0) {
-                console.log('⚠️ No destinations found for today + next few days - showing first 4 destinations as fallback');
+                console.log('⚠️ No destinations found in journey window - showing first 4 destinations as fallback');
                 return journeyLocations.slice(0, 4);
             }
 
-            console.log(`📍 Showing ${filtered.length} destinations (today + next ${DAYS_TO_SHOW} days)`);
+            console.log(`📍 Showing ${filtered.length} destinations from fixed journey start`);
             return filtered;
         }
 
@@ -687,13 +686,11 @@
         // Display configuration info
         if (ENABLE_LIMITED_VIEW) {
             console.log(`📅 LIMITED VIEW ENABLED:`);
-            console.log(`   • Showing: Today + next ${DAYS_TO_SHOW} days`);
-            console.log(`   • Reference date: ${getToday().toDateString()}`);
+            console.log(`   • Fixed journey start: ${getJourneyStartDate().toDateString()}`);
+            console.log(`   • Showing: Journey start + next ${DAYS_TO_SHOW} days`);
             console.log(`   • Total markers: ${workingLocations.length}`);
-            console.log(`   • Starting at marker #1 (today's location)`);
-            if (START_DATE_OVERRIDE) {
-                console.log(`   • ⚠️ Date override active: ${START_DATE_OVERRIDE}`);
-            }
+            console.log(`   • Starting at marker #1 (journey starting point)`);
+            console.log(`   • This gives consistent first 3-4 destinations regardless of current date`);
         } else {
             console.log('🌍 FULL VIEW - All 50 destinations visible');
         }

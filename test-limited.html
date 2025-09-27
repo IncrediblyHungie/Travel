@@ -7,15 +7,15 @@
     <script>
         // Environment variables for testing
         window.DAYS_TO_SHOW = 3; // Show next 3 days
-        window.START_DATE_OVERRIDE = '2025-09-25'; // Test with September 25, 2025
+        window.START_DATE_OVERRIDE = '2025-09-29'; // Fixed journey start: September 29, 2025
         window.ENABLE_LIMITED_VIEW = true; // Enable limited view
     </script>
 </head>
 <body>
     <h1>Limited View Test</h1>
     <p>Check browser console for filtering results</p>
-    <p>Expected: Should show today + next 3 days from September 25, 2025</p>
-    <p>Should include: TODAY (Sept 25) + Maine (Sept 26), New Hampshire (Sept 27), Vermont (Sept 28)</p>
+    <p>Expected: Should show fixed journey start + next 3 days from September 29, 2025</p>
+    <p>Should include: New York (Sept 29), Massachusetts (Sept 30), Rhode Island (Oct 1), Connecticut (Oct 2)</p>
 
     <script>
         // Parse visit date function (copied from main script)
@@ -41,21 +41,22 @@
             console.log(`${dateStr} -> ${parsed.toDateString()}`);
         });
 
-        // Test filtering with override date (today + next 3 days)
-        const today = new Date('2025-09-25');
-        const startDate = new Date(today); // Include today (starting point)
-        const endDate = new Date(today);
-        endDate.setDate(today.getDate() + 3); // Today + next 3 days
+        // Test filtering with fixed journey start date
+        const journeyStart = new Date('2025-09-29');
+        const startDate = new Date(journeyStart); // Fixed journey starting point
+        const endDate = new Date(journeyStart);
+        endDate.setDate(journeyStart.getDate() + 3); // Journey start + next 3 days
 
         console.log(`\nTesting range: ${startDate.toDateString()} to ${endDate.toDateString()}`);
 
-        // Add September 25 to test dates to see if today is included
+        // Test dates around the fixed journey start
         const allTestDates = [
-            "September 25, 2025", // TODAY - should be included as starting point
-            "September 26, 2025",
-            "September 27, 2025",
-            "September 28, 2025",
-            "September 29, 2025"  // Should be excluded (day 4)
+            "September 28, 2025", // Should be excluded (day before journey start)
+            "September 29, 2025", // JOURNEY START - should be included (marker #1)
+            "September 30, 2025", // Day 2 - should be included (marker #2)
+            "October 1, 2025",    // Day 3 - should be included (marker #3)
+            "October 2, 2025",    // Day 4 - should be included (marker #4)
+            "October 3, 2025"     // Should be excluded (day 5)
         ];
 
         allTestDates.forEach(dateStr => {
