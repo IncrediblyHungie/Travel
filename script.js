@@ -681,7 +681,9 @@
         function getFilteredLocations() {
             // Progressive reveal logic: show more destinations as days pass
             const journeyStart = getJourneyStartDate(); // Sept 29, 2025
-            const today = new Date(); // Actual current date
+
+            // Use test date override if available, otherwise use actual current date
+            const today = window.TEST_DATE_OVERRIDE ? new Date(window.TEST_DATE_OVERRIDE) : new Date();
 
             // Calculate days since journey start
             const daysSinceStart = Math.floor((today - journeyStart) / (1000 * 60 * 60 * 24));
@@ -710,7 +712,7 @@
 
             console.log(`🎯 PROGRESSIVE REVEAL ACTIVE:`);
             console.log(`   Journey start: ${journeyStart.toDateString()}`);
-            console.log(`   Today: ${today.toDateString()}`);
+            console.log(`   Today: ${today.toDateString()}${window.TEST_DATE_OVERRIDE ? ' (SIMULATED FOR TESTING)' : ''}`);
             console.log(`   Days since start: ${daysSinceStart}`);
             console.log(`   Destinations to show: ${destinationsToShow}/50`);
 

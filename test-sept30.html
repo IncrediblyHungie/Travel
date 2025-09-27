@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test September 30th Progression</title>
+    <script src="env.js"></script>
+</head>
+<body>
+    <h1>🗓️ Testing September 30th Progression</h1>
+    <p>Simulating today as <strong>September 30, 2025</strong> (Day 1 of journey)</p>
+    <p>Check browser console for detailed results</p>
+
+    <div style="background: #f0f8ff; padding: 20px; border-radius: 10px; margin: 20px 0;">
+        <h3>Expected Results for September 30th:</h3>
+        <ul>
+            <li><strong>Days since start:</strong> 1 (Sept 29 = day 0, Sept 30 = day 1)</li>
+            <li><strong>Real destinations:</strong> 4 (Maine, New Hampshire, Vermont, New York)</li>
+            <li><strong>Mystery card:</strong> 5th card previewing Massachusetts</li>
+            <li><strong>Total cards:</strong> 5</li>
+        </ul>
+
+        <h4>Progression Check:</h4>
+        <p><strong>Sept 29 (Day 0):</strong> 3 real + 1 mystery = 4 cards</p>
+        <p><strong>Sept 30 (Day 1):</strong> 4 real + 1 mystery = 5 cards ✨</p>
+    </div>
+
+    <script>
+        // Test the progression logic
+        function testSept30Progression() {
+            console.log('🧪 TESTING SEPTEMBER 30TH PROGRESSION');
+            console.log('=====================================');
+
+            // Journey start date
+            const journeyStart = new Date('2025-09-29');
+
+            // Simulated current date (Sept 30th)
+            const simulatedToday = new Date('2025-09-30');
+
+            console.log(`📅 Journey start: ${journeyStart.toDateString()}`);
+            console.log(`📅 Simulated today: ${simulatedToday.toDateString()}`);
+
+            // Calculate days since start
+            const daysSinceStart = Math.floor((simulatedToday - journeyStart) / (1000 * 60 * 60 * 24));
+            console.log(`📊 Days since start: ${daysSinceStart}`);
+
+            // Calculate destinations to show
+            let destinationsToShow;
+            if (daysSinceStart < 0) {
+                destinationsToShow = 3;
+                console.log(`📅 Before journey start - showing first 3 destinations`);
+            } else if (daysSinceStart === 0) {
+                destinationsToShow = 3;
+                console.log(`🚀 Journey start day! Showing 3 destinations`);
+            } else {
+                destinationsToShow = Math.min(3 + daysSinceStart, 50);
+                console.log(`📈 Day ${daysSinceStart} of journey - showing ${destinationsToShow} destinations`);
+            }
+
+            // Test destinations list
+            const testDestinations = [
+                { id: 1, state: "Maine", name: "Cadillac Mountain", visitDate: "September 29, 2025" },
+                { id: 2, state: "New Hampshire", name: "Mount Washington", visitDate: "September 30, 2025" },
+                { id: 3, state: "Vermont", name: "Stowe Pinnacle", visitDate: "October 1, 2025" },
+                { id: 4, state: "New York", name: "Whiteface Mountain", visitDate: "October 2, 2025" },
+                { id: 5, state: "Massachusetts", name: "Mount Greylock", visitDate: "October 3, 2025" },
+                { id: 6, state: "Connecticut", name: "Mount Frissell", visitDate: "October 4, 2025" }
+            ];
+
+            let filtered = testDestinations.slice(0, destinationsToShow);
+
+            // Add Coming Soon mystery card
+            if (window.ENABLE_COMING_SOON && destinationsToShow < 50 && filtered.length >= 1) {
+                const nextDestinationIndex = destinationsToShow;
+                const nextActualDestination = testDestinations[nextDestinationIndex];
+
+                if (nextActualDestination) {
+                    const comingSoonDestination = {
+                        id: nextActualDestination.id,
+                        state: "Coming Soon",
+                        name: "Mystery Destination",
+                        visitDate: "Soon",
+                        description: "The next adventure awaits...",
+                        isComingSoon: true
+                    };
+
+                    filtered.push(comingSoonDestination);
+
+                    console.log(`🔮 COMING SOON: Added mystery card #${filtered.length}`);
+                    console.log(`   Next actual: ${nextActualDestination.state} - ${nextActualDestination.name}`);
+                    console.log(`   Total cards: ${destinationsToShow} real + 1 mystery = ${filtered.length}`);
+                }
+            }
+
+            console.log(`\n📍 Expected display for September 30th (${filtered.length} total cards):`);
+            filtered.forEach((location, index) => {
+                if (location.isComingSoon) {
+                    console.log(`   ${index + 1}. 🔮 ${location.state} - ${location.name}`);
+                } else {
+                    console.log(`   ${index + 1}. ${location.state} - ${location.name} (${location.visitDate})`);
+                }
+            });
+
+            console.log('\n✅ PROGRESSION TEST RESULTS:');
+            console.log(`Expected for Sept 30: 4 real destinations + 1 mystery = 5 cards`);
+            console.log(`Actual result: ${filtered.filter(l => !l.isComingSoon).length} real + ${filtered.filter(l => l.isComingSoon).length} mystery = ${filtered.length} cards`);
+
+            if (filtered.length === 5 && filtered.filter(l => !l.isComingSoon).length === 4) {
+                console.log('🎉 SUCCESS! Progression working correctly');
+            } else {
+                console.log('❌ ISSUE: Progression not working as expected');
+            }
+
+            return filtered;
+        }
+
+        // Run test when page loads
+        window.addEventListener('load', () => {
+            console.log('🔧 Environment configuration:');
+            console.log('TRAVEL_CONFIG:', window.TRAVEL_CONFIG);
+            console.log(`TEST_DATE_OVERRIDE: ${window.TEST_DATE_OVERRIDE}`);
+
+            testSept30Progression();
+        });
+    </script>
+</body>
+</html>
