@@ -621,6 +621,7 @@
         const DAYS_TO_SHOW = parseInt(window.DAYS_TO_SHOW || 3); // Default: 3 days
         const START_DATE_OVERRIDE = window.START_DATE_OVERRIDE || '2025-09-29'; // Default: September 29, 2025 (journey beginning)
         const ENABLE_LIMITED_VIEW = window.ENABLE_LIMITED_VIEW !== 'false'; // Default: true, set to 'false' to show all 50 destinations
+        const ENABLE_COMING_SOON = window.ENABLE_COMING_SOON !== 'false'; // Default: true, set to 'false' to disable mystery last destination
 
         // Date filtering logic
         function parseVisitDate(visitDateString) {
@@ -645,6 +646,36 @@
             endDate.setDate(journeyStart.getDate() + daysFromStart); // Start + next 3 days
 
             return visitDate >= startDate && visitDate <= endDate;
+        }
+
+        // Create a mystery "Coming Soon" destination object
+        function createComingSoonDestination(actualDestinationNumber) {
+            const mysteryMessages = [
+                "The next adventure awaits...",
+                "A hidden gem yet to be revealed...",
+                "Mystery destination unlocking soon...",
+                "Adventure continues tomorrow...",
+                "Next destination is a surprise...",
+                "The journey's next chapter...",
+                "Another breathtaking location awaits...",
+                "Discovering America, one day at a time..."
+            ];
+
+            // Use center of continental US as mystery coordinates
+            const mysteryCoordinates = [-98.5, 39.5];
+
+            return {
+                id: actualDestinationNumber,
+                state: "Coming Soon",
+                name: "Mystery Destination",
+                address: "Somewhere in America",
+                coordinates: mysteryCoordinates,
+                driveTime: "?",
+                hikeTime: "?",
+                visitDate: "Soon",
+                description: mysteryMessages[Math.floor(Math.random() * mysteryMessages.length)],
+                isComingSoon: true // Special flag to identify mystery destinations
+            };
         }
 
         function getFilteredLocations() {
@@ -683,11 +714,29 @@
             console.log(`   Days since start: ${daysSinceStart}`);
             console.log(`   Destinations to show: ${destinationsToShow}/50`);
 
-            const filtered = journeyLocations.slice(0, destinationsToShow);
+            let filtered = journeyLocations.slice(0, destinationsToShow);
+
+            // Apply "Coming Soon" mystery for the last destination (unless showing all 50)
+            if (ENABLE_COMING_SOON && destinationsToShow < 50 && filtered.length > 1) {
+                const lastIndex = filtered.length - 1;
+                const actualLastDestination = filtered[lastIndex];
+                const comingSoonDestination = createComingSoonDestination(actualLastDestination.id);
+
+                // Replace last destination with mystery
+                filtered[lastIndex] = comingSoonDestination;
+
+                console.log(`🔮 COMING SOON ACTIVE: Last destination (#${actualLastDestination.id}) replaced with mystery`);
+                console.log(`   Original: ${actualLastDestination.state} - ${actualLastDestination.name}`);
+                console.log(`   Mystery: ${comingSoonDestination.description}`);
+            }
 
             console.log(`📍 Progressive reveal showing destinations 1-${destinationsToShow}:`);
             filtered.forEach((location, index) => {
-                console.log(`   ${index + 1}. ${location.state} - ${location.name} (${location.visitDate})`);
+                if (location.isComingSoon) {
+                    console.log(`   ${index + 1}. 🔮 ${location.state} - ${location.name} (${location.description})`);
+                } else {
+                    console.log(`   ${index + 1}. ${location.state} - ${location.name} (${location.visitDate})`);
+                }
             });
 
             return filtered;
@@ -901,28 +950,70 @@
                     const markerEl = document.createElement('div');
                     markerEl.className = `journey-marker ${markerStatus}`;
 
-                    // Set explicit dimensions with NO transforms to preserve coordinate accuracy
-                    markerEl.style.cssText = `
-                        width: 32px;
-                        height: 32px;
-                        border-radius: 50%;
-                        background: ${markerStatus === 'completed' ? 'linear-gradient(135deg, #FF6B35, #FFAB91)' :
-                                     markerStatus === 'current' ? 'linear-gradient(135deg, #FFD700, #FFA500)' :
-                                     'rgba(255, 255, 255, 0.1)'};
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: ${markerStatus === 'future' ? '#fff' : '#000'};
-                        font-size: 14px;
-                        font-weight: 700;
-                        margin: 0;
-                        padding: 0;
-                        border: 2px solid rgba(255, 255, 255, 0.8);
-                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                        text-shadow: ${markerStatus === 'future' ? '0 1px 2px rgba(0, 0, 0, 0.5)' : '0 1px 2px rgba(255, 255, 255, 0.5)'};
-                    `;
+                    // Special styling for Coming Soon destinations
+                    if (location.isComingSoon) {
+                        markerEl.style.cssText = `
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            background: linear-gradient(45deg, #8A2BE2, #9932CC, #BA55D3, #DA70D6);
+                            background-size: 400% 400%;
+                            animation: mysteryGlow 3s ease-in-out infinite;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: #fff;
+                            font-size: 16px;
+                            font-weight: 700;
+                            margin: 0;
+                            padding: 0;
+                            border: 3px solid rgba(255, 255, 255, 0.9);
+                            box-shadow: 0 0 20px rgba(138, 43, 226, 0.6), 0 4px 12px rgba(0, 0, 0, 0.3);
+                            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+                            position: relative;
+                            overflow: hidden;
+                        `;
+                        markerEl.textContent = '?';
 
-                    markerEl.textContent = markerIndex.toString();
+                        // Add pulsing glow effect
+                        markerEl.innerHTML = `
+                            <div style="
+                                position: absolute;
+                                top: -3px;
+                                left: -3px;
+                                right: -3px;
+                                bottom: -3px;
+                                border-radius: 50%;
+                                background: linear-gradient(45deg, #8A2BE2, #9932CC, #BA55D3, #DA70D6);
+                                opacity: 0.3;
+                                animation: mysteryPulse 2s ease-in-out infinite;
+                                z-index: -1;
+                            "></div>
+                            <span style="position: relative; z-index: 1;">?</span>
+                        `;
+                    } else {
+                        // Set explicit dimensions with NO transforms to preserve coordinate accuracy
+                        markerEl.style.cssText = `
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 50%;
+                            background: ${markerStatus === 'completed' ? 'linear-gradient(135deg, #FF6B35, #FFAB91)' :
+                                         markerStatus === 'current' ? 'linear-gradient(135deg, #FFD700, #FFA500)' :
+                                         'rgba(255, 255, 255, 0.1)'};
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: ${markerStatus === 'future' ? '#fff' : '#000'};
+                            font-size: 14px;
+                            font-weight: 700;
+                            margin: 0;
+                            padding: 0;
+                            border: 2px solid rgba(255, 255, 255, 0.8);
+                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                            text-shadow: ${markerStatus === 'future' ? '0 1px 2px rgba(0, 0, 0, 0.5)' : '0 1px 2px rgba(255, 255, 255, 0.5)'};
+                        `;
+                        markerEl.textContent = markerIndex.toString();
+                    }
 
                     // Create marker with anchor: 'center' to ensure precise positioning
                     const marker = new mapboxgl.Marker({
@@ -935,20 +1026,72 @@
                     // Track marker instance for proper cleanup
                     markerInstances.push(marker);
 
-                    // Add popup
-                    const popupContent = `
-                        <div class="journey-popup">
-                            <h3 style="text-align: center;">${location.state} - ${location.name}</h3>
-                            <p class="visit-date" style="color: var(--sunset-orange); font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; text-align: center;">📅 ${location.visitDate}</p>
-                            <p class="address">${location.address}</p>
-                            <p class="description">${location.description}</p>
-                            <div class="journey-stats">
-                                <span class="drive-time">🚗 ${location.driveTime}</span>
-                                ${location.hikeTime ? `<span class="hike-time">🥾 ${location.hikeTime}</span>` : ''}
-                                ${location.flightTime ? `<span class="flight-time">✈️ ${location.flightTime}</span>` : ''}
+                    // Add popup with special styling for Coming Soon destinations
+                    let popupContent;
+                    if (location.isComingSoon) {
+                        popupContent = `
+                            <div class="journey-popup mystery-popup" style="
+                                background: linear-gradient(135deg, #8A2BE2, #9932CC, #BA55D3);
+                                color: white;
+                                border-radius: 15px;
+                                position: relative;
+                                overflow: hidden;
+                            ">
+                                <div style="
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    right: 0;
+                                    bottom: 0;
+                                    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+                                    animation: mysteryShimmer 3s ease-in-out infinite;
+                                    pointer-events: none;
+                                "></div>
+                                <div style="position: relative; z-index: 2;">
+                                    <h3 style="text-align: center; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                                        🔮 ${location.state} - ${location.name}
+                                    </h3>
+                                    <p class="visit-date" style="color: #FFD700; font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; text-align: center; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                                        ✨ ${location.visitDate}
+                                    </p>
+                                    <p class="address" style="color: rgba(255,255,255,0.9); text-align: center; font-style: italic;">
+                                        ${location.address}
+                                    </p>
+                                    <p class="description" style="color: white; text-align: center; font-size: 1.1rem; margin: 15px 0; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                                        ${location.description}
+                                    </p>
+                                    <div class="journey-stats" style="
+                                        display: flex;
+                                        gap: 15px;
+                                        justify-content: center;
+                                        margin: 15px 0;
+                                        padding: 10px;
+                                        background: rgba(255, 255, 255, 0.1);
+                                        border-radius: 10px;
+                                        backdrop-filter: blur(10px);
+                                    ">
+                                        <span style="color: #FFD700;">🌟 Coming Soon</span>
+                                        <span style="color: #FFD700;">🔮 Mystery</span>
+                                        <span style="color: #FFD700;">✨ Surprise</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        popupContent = `
+                            <div class="journey-popup">
+                                <h3 style="text-align: center;">${location.state} - ${location.name}</h3>
+                                <p class="visit-date" style="color: var(--sunset-orange); font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; text-align: center;">📅 ${location.visitDate}</p>
+                                <p class="address">${location.address}</p>
+                                <p class="description">${location.description}</p>
+                                <div class="journey-stats">
+                                    <span class="drive-time">🚗 ${location.driveTime}</span>
+                                    ${location.hikeTime ? `<span class="hike-time">🥾 ${location.hikeTime}</span>` : ''}
+                                    ${location.flightTime ? `<span class="flight-time">✈️ ${location.flightTime}</span>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
 
                     // Detect if device supports touch
                     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -1437,67 +1580,166 @@
         function createOptimizedCard(location, gradient, index) {
             // Create main card container
             const card = document.createElement('div');
-            card.className = 'destination-card';
 
-            // Create background
-            const bg = document.createElement('div');
-            bg.className = 'destination-bg';
-            bg.style.background = gradient;
-            card.appendChild(bg);
+            // Special styling for Coming Soon destinations
+            if (location.isComingSoon) {
+                card.className = 'destination-card mystery-card';
+                card.style.cssText = `
+                    background: linear-gradient(135deg, #8A2BE2, #9932CC, #BA55D3, #DA70D6);
+                    background-size: 400% 400%;
+                    animation: mysteryGlow 4s ease-in-out infinite;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                    box-shadow: 0 0 30px rgba(138, 43, 226, 0.4), 0 8px 32px rgba(0, 0, 0, 0.2);
+                    position: relative;
+                    overflow: hidden;
+                `;
 
-            // Create number
+                // Add shimmering overlay
+                const shimmer = document.createElement('div');
+                shimmer.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+                    animation: mysteryShimmer 3s ease-in-out infinite;
+                    pointer-events: none;
+                `;
+                card.appendChild(shimmer);
+            } else {
+                card.className = 'destination-card';
+            }
+
+            // Create background (only for non-mystery cards)
+            if (!location.isComingSoon) {
+                const bg = document.createElement('div');
+                bg.className = 'destination-bg';
+                bg.style.background = gradient;
+                card.appendChild(bg);
+            }
+
+            // Create number with special styling for mystery cards
             const number = document.createElement('div');
             number.className = 'destination-number';
-            number.textContent = (index + 1).toString().padStart(2, '0');
+            if (location.isComingSoon) {
+                number.textContent = '?';
+                number.style.cssText = `
+                    color: #FFD700;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7), 0 0 10px rgba(255, 215, 0, 0.5);
+                    font-size: 1.8rem;
+                    font-weight: 900;
+                `;
+            } else {
+                number.textContent = (index + 1).toString().padStart(2, '0');
+            }
             card.appendChild(number);
 
             // Create content container
             const content = document.createElement('div');
             content.className = 'destination-content';
+            if (location.isComingSoon) {
+                content.style.cssText = `
+                    color: white;
+                    position: relative;
+                    z-index: 10;
+                `;
+            }
 
             // Create name
             const name = document.createElement('h3');
             name.className = 'destination-name';
             name.textContent = location.name;
+            if (location.isComingSoon) {
+                name.style.cssText = `
+                    color: #FFD700;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+                `;
+                name.textContent = '🔮 ' + location.name;
+            }
             content.appendChild(name);
 
             // Create state
             const state = document.createElement('p');
             state.className = 'destination-state';
             state.textContent = location.state;
+            if (location.isComingSoon) {
+                state.style.cssText = `
+                    color: rgba(255, 255, 255, 0.9);
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+                `;
+                state.textContent = '✨ ' + location.state;
+            }
             content.appendChild(state);
 
             // Create description
             const description = document.createElement('p');
             description.className = 'destination-description';
             description.textContent = location.description;
+            if (location.isComingSoon) {
+                description.style.cssText = `
+                    color: white;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+                    font-style: italic;
+                    font-size: 1.1rem;
+                `;
+            }
             content.appendChild(description);
 
             // Create visit date
             const visitDate = document.createElement('div');
             visitDate.className = 'visit-date';
-            visitDate.textContent = `📅 ${location.visitDate}`;
+            if (location.isComingSoon) {
+                visitDate.textContent = `✨ ${location.visitDate}`;
+                visitDate.style.cssText = `
+                    color: #FFD700;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+                    font-weight: 700;
+                `;
+            } else {
+                visitDate.textContent = `📅 ${location.visitDate}`;
+            }
             content.appendChild(visitDate);
 
             // Create details container
             const details = document.createElement('div');
             details.className = 'destination-details';
 
-            // Add travel times if they exist
-            const travelTypes = [
-                { time: location.driveTime, icon: '🚗' },
-                { time: location.hikeTime, icon: '🥾' },
-                { time: location.flightTime, icon: '✈️' }
-            ];
+            if (location.isComingSoon) {
+                // Special mystery details for Coming Soon cards
+                const mysteryDetails = [
+                    { icon: '🌟', text: 'Coming Soon' },
+                    { icon: '🔮', text: 'Mystery' },
+                    { icon: '✨', text: 'Surprise' }
+                ];
 
-            travelTypes.forEach(travel => {
-                if (travel.time) {
+                mysteryDetails.forEach(detail => {
                     const span = document.createElement('span');
-                    span.className = 'travel-time';
-                    span.textContent = `${travel.icon} ${travel.time}`;
+                    span.className = 'travel-time mystery-detail';
+                    span.textContent = `${detail.icon} ${detail.text}`;
+                    span.style.cssText = `
+                        color: #FFD700;
+                        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+                    `;
                     details.appendChild(span);
-                }
-            });
+                });
+            } else {
+                // Add travel times if they exist (for normal cards)
+                const travelTypes = [
+                    { time: location.driveTime, icon: '🚗' },
+                    { time: location.hikeTime, icon: '🥾' },
+                    { time: location.flightTime, icon: '✈️' }
+                ];
+
+                travelTypes.forEach(travel => {
+                    if (travel.time) {
+                        const span = document.createElement('span');
+                        span.className = 'travel-time';
+                        span.textContent = `${travel.icon} ${travel.time}`;
+                        details.appendChild(span);
+                    }
+                });
+            }
 
             content.appendChild(details);
             card.appendChild(content);

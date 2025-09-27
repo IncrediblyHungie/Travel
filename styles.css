@@ -1656,3 +1656,55 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(255, 107, 53, 0.2);
         }
+
+        /* Coming Soon Mystery Marker Animations */
+        @keyframes mysteryGlow {
+            0% {
+                background-position: 0% 50%;
+                filter: hue-rotate(0deg);
+            }
+            25% {
+                background-position: 100% 50%;
+                filter: hue-rotate(15deg);
+            }
+            50% {
+                background-position: 100% 100%;
+                filter: hue-rotate(30deg);
+            }
+            75% {
+                background-position: 0% 100%;
+                filter: hue-rotate(15deg);
+            }
+            100% {
+                background-position: 0% 50%;
+                filter: hue-rotate(0deg);
+            }
+        }
+
+        @keyframes mysteryPulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.6;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+        }
+
+        @keyframes mysteryShimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            50% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(300%);
+            }
+        }
+        }
