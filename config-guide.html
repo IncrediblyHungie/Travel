@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Map Configuration Guide</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.6; }
+        .config-section { background: #f5f5f5; padding: 1.5rem; margin: 1rem 0; border-radius: 8px; }
+        .code { background: #e8e8e8; padding: 0.5rem; border-radius: 4px; font-family: monospace; }
+        .option { border: 2px solid #ddd; padding: 1rem; margin: 1rem 0; border-radius: 8px; }
+        .option h3 { margin-top: 0; color: #333; }
+        .limited { border-color: #4CAF50; }
+        .full { border-color: #2196F3; }
+    </style>
+</head>
+<body>
+    <h1>🗺️ Travel Map Configuration Guide</h1>
+
+    <div class="config-section">
+        <h2>📅 Journey Start Date: September 29, 2025</h2>
+        <p><strong>Maine (Cadillac Mountain)</strong> now starts on September 29, 2025</p>
+        <p>The journey progresses: Maine → New Hampshire → Vermont → New York</p>
+    </div>
+
+    <h2>🔧 Two View Options:</h2>
+
+    <div class="option limited">
+        <h3>🎯 Option 1: Limited View (Next 4 Days)</h3>
+        <p><strong>Shows:</strong> Only the next 4 destinations starting from September 29</p>
+        <p><strong>Markers:</strong> 4 total (Maine, New Hampshire, Vermont, New York)</p>
+
+        <h4>🌐 Netlify Environment Variables:</h4>
+        <div class="code">
+START_DATE_OVERRIDE=2025-09-29<br>
+DAYS_TO_SHOW=3<br>
+ENABLE_LIMITED_VIEW=true
+        </div>
+
+        <h4>📝 OR add to HTML head:</h4>
+        <div class="code">
+&lt;script&gt;<br>
+&nbsp;&nbsp;window.START_DATE_OVERRIDE = '2025-09-29';<br>
+&nbsp;&nbsp;window.DAYS_TO_SHOW = 3;<br>
+&nbsp;&nbsp;window.ENABLE_LIMITED_VIEW = true;<br>
+&lt;/script&gt;
+        </div>
+    </div>
+
+    <div class="option full">
+        <h3>🌍 Option 2: Full View (All 50 States)</h3>
+        <p><strong>Shows:</strong> Complete 50-state journey map</p>
+        <p><strong>Markers:</strong> 50 total (all destinations)</p>
+
+        <h4>🌐 Netlify Environment Variables:</h4>
+        <div class="code">
+START_DATE_OVERRIDE=2025-09-29<br>
+DAYS_TO_SHOW=3<br>
+ENABLE_LIMITED_VIEW=false
+        </div>
+
+        <h4>📝 OR add to HTML head:</h4>
+        <div class="code">
+&lt;script&gt;<br>
+&nbsp;&nbsp;window.START_DATE_OVERRIDE = '2025-09-29';<br>
+&nbsp;&nbsp;window.DAYS_TO_SHOW = 3;<br>
+&nbsp;&nbsp;window.ENABLE_LIMITED_VIEW = false;<br>
+&lt;/script&gt;
+        </div>
+    </div>
+
+    <div class="config-section">
+        <h2>🚀 Quick Test</h2>
+        <p>To test full view immediately, add this to the top of index.html:</p>
+        <div class="code">
+&lt;script&gt;<br>
+&nbsp;&nbsp;window.ENABLE_LIMITED_VIEW = false;<br>
+&lt;/script&gt;
+        </div>
+        <p>This will override the default and show all 50 destinations!</p>
+    </div>
+
+    <div class="config-section">
+        <h2>📊 What Changes:</h2>
+        <ul>
+            <li><strong>Limited View (true):</strong> 4 markers, focused map view, route progression 1→2→3→4</li>
+            <li><strong>Full View (false):</strong> 50 markers, full USA map, complete journey progression</li>
+        </ul>
+    </div>
+</body>
+</html>

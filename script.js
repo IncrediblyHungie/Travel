@@ -71,7 +71,7 @@
                 coordinates: [-68.2251, 44.3527],
                 driveTime: "0",
                 hikeTime: "0",
-                visitDate: "September 26, 2025",
+                visitDate: "September 29, 2025",
                 description: "First light in America - the journey begins at the highest point along the North Atlantic seaboard"
             },
             {
@@ -82,7 +82,7 @@
                 coordinates: [-71.3032, 44.2706],
                 driveTime: "2h 46min",
                 hikeTime: "0",
-                visitDate: "September 27, 2025",
+                visitDate: "September 30, 2025",
                 description: "Above the clouds on the Northeast's highest peak"
             },
             {
@@ -93,7 +93,7 @@
                 coordinates: [-72.7103, 44.4669],
                 driveTime: "2h 52min",
                 hikeTime: "1h",
-                visitDate: "September 28, 2025",
+                visitDate: "October 1, 2025",
                 description: "Vermont's Green Mountains painted in sunset colors"
             },
             {
@@ -104,7 +104,7 @@
                 coordinates: [-73.9026, 44.3659],
                 driveTime: "2h 41min",
                 hikeTime: "5min",
-                visitDate: "September 29, 2025",
+                visitDate: "October 2, 2025",
                 description: "Adirondack wilderness and Olympic history"
             },
             {
@@ -619,8 +619,8 @@
 
         // Environment variable support for Netlify configuration
         const DAYS_TO_SHOW = parseInt(window.DAYS_TO_SHOW || 3); // Default: 3 days
-        const START_DATE_OVERRIDE = window.START_DATE_OVERRIDE || '2025-09-26'; // Default: September 26, 2025 (journey beginning)
-        const ENABLE_LIMITED_VIEW = window.ENABLE_LIMITED_VIEW !== 'false'; // Default: true
+        const START_DATE_OVERRIDE = window.START_DATE_OVERRIDE || '2025-09-29'; // Default: September 29, 2025 (journey beginning)
+        const ENABLE_LIMITED_VIEW = window.ENABLE_LIMITED_VIEW !== 'false'; // Default: true, set to 'false' to show all 50 destinations
 
         // Date filtering logic
         function parseVisitDate(visitDateString) {
