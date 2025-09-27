@@ -648,34 +648,48 @@
         }
 
         function getFilteredLocations() {
+            // Progressive reveal logic: show more destinations as days pass
+            const journeyStart = getJourneyStartDate(); // Sept 29, 2025
+            const today = new Date(); // Actual current date
+
+            // Calculate days since journey start
+            const daysSinceStart = Math.floor((today - journeyStart) / (1000 * 60 * 60 * 24));
+
+            // Base destinations to show (start with 3, add 1 per day)
+            let destinationsToShow;
+
+            if (daysSinceStart < 0) {
+                // Before journey start - show first 3 destinations
+                destinationsToShow = 3;
+                console.log(`📅 Before journey start (${Math.abs(daysSinceStart)} days early) - showing first 3 destinations`);
+            } else if (daysSinceStart === 0) {
+                // Journey start day (Sept 29) - show 3 destinations
+                destinationsToShow = 3;
+                console.log(`🚀 Journey start day! Showing 3 destinations`);
+            } else {
+                // After journey start - add 1 destination per day
+                destinationsToShow = Math.min(3 + daysSinceStart, 50);
+                console.log(`📈 Day ${daysSinceStart} of journey - showing ${destinationsToShow} destinations`);
+            }
+
             if (!ENABLE_LIMITED_VIEW) {
-                console.log('Limited view disabled - showing all destinations');
+                console.log('🌍 Limited view disabled - showing all 50 destinations');
                 return journeyLocations;
             }
 
-            const journeyStart = getJourneyStartDate();
-            console.log(`Filtering destinations from fixed start date: ${journeyStart.toDateString()}`);
-            console.log(`Showing next ${DAYS_TO_SHOW + 1} days from start date (${DAYS_TO_SHOW + 1} total destinations)`);
+            console.log(`🎯 PROGRESSIVE REVEAL ACTIVE:`);
+            console.log(`   Journey start: ${journeyStart.toDateString()}`);
+            console.log(`   Today: ${today.toDateString()}`);
+            console.log(`   Days since start: ${daysSinceStart}`);
+            console.log(`   Destinations to show: ${destinationsToShow}/50`);
 
-            const filtered = journeyLocations.filter(location => {
-                const visitDate = parseVisitDate(location.visitDate);
-                const isInRange = isWithinJourneyWindow(visitDate);
+            const filtered = journeyLocations.slice(0, destinationsToShow);
 
-                if (isInRange) {
-                    console.log(`✅ Including: ${location.state} - ${location.name} (${location.visitDate})`);
-                } else {
-                    console.log(`❌ Excluding: ${location.state} - ${location.name} (${location.visitDate})`);
-                }
-
-                return isInRange;
+            console.log(`📍 Progressive reveal showing destinations 1-${destinationsToShow}:`);
+            filtered.forEach((location, index) => {
+                console.log(`   ${index + 1}. ${location.state} - ${location.name} (${location.visitDate})`);
             });
 
-            if (filtered.length === 0) {
-                console.log('⚠️ No destinations found in journey window - showing first 4 destinations as fallback');
-                return journeyLocations.slice(0, 4);
-            }
-
-            console.log(`📍 Showing ${filtered.length} destinations from fixed journey start`);
             return filtered;
         }
 
