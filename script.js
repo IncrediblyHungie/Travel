@@ -716,21 +716,26 @@
 
             let filtered = journeyLocations.slice(0, destinationsToShow);
 
-            // Apply "Coming Soon" mystery for the last destination (unless showing all 50)
-            if (ENABLE_COMING_SOON && destinationsToShow < 50 && filtered.length > 1) {
-                const lastIndex = filtered.length - 1;
-                const actualLastDestination = filtered[lastIndex];
-                const comingSoonDestination = createComingSoonDestination(actualLastDestination.id);
+            // Apply "Coming Soon" mystery as an ADDITIONAL card (unless showing all 50)
+            if (ENABLE_COMING_SOON && destinationsToShow < 50 && filtered.length >= 1) {
+                // Get the next destination after our current visible ones
+                const nextDestinationIndex = destinationsToShow; // 0-based index of next destination
+                const nextActualDestination = journeyLocations[nextDestinationIndex];
 
-                // Replace last destination with mystery
-                filtered[lastIndex] = comingSoonDestination;
+                if (nextActualDestination) {
+                    const comingSoonDestination = createComingSoonDestination(nextActualDestination.id);
 
-                console.log(`🔮 COMING SOON ACTIVE: Last destination (#${actualLastDestination.id}) replaced with mystery`);
-                console.log(`   Original: ${actualLastDestination.state} - ${actualLastDestination.name}`);
-                console.log(`   Mystery: ${comingSoonDestination.description}`);
+                    // ADD mystery as an extra card (don't replace existing ones)
+                    filtered.push(comingSoonDestination);
+
+                    console.log(`🔮 COMING SOON ACTIVE: Added mystery destination as card #${filtered.length}`);
+                    console.log(`   Next actual destination: ${nextActualDestination.state} - ${nextActualDestination.name}`);
+                    console.log(`   Mystery preview: ${comingSoonDestination.description}`);
+                    console.log(`   Current visible: ${destinationsToShow} real + 1 mystery = ${filtered.length} total cards`);
+                }
             }
 
-            console.log(`📍 Progressive reveal showing destinations 1-${destinationsToShow}:`);
+            console.log(`📍 Progressive reveal showing ${filtered.length} total cards:`);
             filtered.forEach((location, index) => {
                 if (location.isComingSoon) {
                     console.log(`   ${index + 1}. 🔮 ${location.state} - ${location.name} (${location.description})`);

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Coming Soon Feature</title>
+    <script src="env.js"></script>
+</head>
+<body>
+    <h1>Coming Soon Feature Test (Updated Logic)</h1>
+    <p>Check browser console for test results</p>
+    <p><strong>Expected: Should show Maine, New Hampshire, Vermont + Coming Soon mystery as 4th card</strong></p>
+    <p>Tomorrow: Would show Maine, New Hampshire, Vermont, New York + Coming Soon mystery as 5th card</p>
+
+    <script>
+        // Extract just the filtering logic for testing
+        function getJourneyStartDate() {
+            if (window.START_DATE_OVERRIDE) {
+                return new Date(window.START_DATE_OVERRIDE);
+            }
+            return new Date('2025-09-29'); // Default journey start
+        }
+
+        // Create a minimal set of test locations
+        const testLocations = [
+            {
+                id: 1,
+                state: "Maine",
+                name: "Cadillac Mountain",
+                visitDate: "September 29, 2025",
+                description: "First light in America"
+            },
+            {
+                id: 2,
+                state: "New Hampshire",
+                name: "Mount Washington",
+                visitDate: "September 30, 2025",
+                description: "Above the clouds"
+            },
+            {
+                id: 3,
+                state: "Vermont",
+                name: "Stowe Pinnacle",
+                visitDate: "October 1, 2025",
+                description: "Green Mountains"
+            },
+            {
+                id: 4,
+                state: "New York",
+                name: "Whiteface Mountain",
+                visitDate: "October 2, 2025",
+                description: "Adirondack peak"
+            }
+        ];
+
+        // Create Coming Soon destination function
+        function createComingSoonDestination(actualDestinationNumber) {
+            const mysteryMessages = [
+                "The next adventure awaits...",
+                "A hidden gem yet to be revealed...",
+                "Mystery destination unlocking soon..."
+            ];
+
+            return {
+                id: actualDestinationNumber,
+                state: "Coming Soon",
+                name: "Mystery Destination",
+                address: "Somewhere in America",
+                coordinates: [-98.5, 39.5],
+                visitDate: "Soon",
+                description: mysteryMessages[Math.floor(Math.random() * mysteryMessages.length)],
+                isComingSoon: true
+            };
+        }
+
+        // Test the filtering logic
+        function testFilteredLocations() {
+            console.log('🧪 TESTING COMING SOON FEATURE');
+            console.log('================================');
+
+            const journeyStart = getJourneyStartDate();
+            const today = new Date(); // Current date
+            const daysSinceStart = Math.floor((today - journeyStart) / (1000 * 60 * 60 * 24));
+
+            console.log(`📅 Journey start: ${journeyStart.toDateString()}`);
+            console.log(`📅 Today: ${today.toDateString()}`);
+            console.log(`📊 Days since start: ${daysSinceStart}`);
+            console.log(`🎯 ENABLE_LIMITED_VIEW: ${window.ENABLE_LIMITED_VIEW}`);
+            console.log(`🔮 ENABLE_COMING_SOON: ${window.ENABLE_COMING_SOON}`);
+
+            let destinationsToShow;
+            if (daysSinceStart < 0) {
+                destinationsToShow = 3;
+                console.log(`📅 Before journey start (${Math.abs(daysSinceStart)} days early) - showing first 3 destinations`);
+            } else if (daysSinceStart === 0) {
+                destinationsToShow = 3;
+                console.log(`🚀 Journey start day! Showing 3 destinations`);
+            } else {
+                destinationsToShow = Math.min(3 + daysSinceStart, 50);
+                console.log(`📈 Day ${daysSinceStart} of journey - showing ${destinationsToShow} destinations`);
+            }
+
+            if (!window.ENABLE_LIMITED_VIEW) {
+                console.log('🌍 Limited view disabled - would show all destinations');
+                return testLocations;
+            }
+
+            let filtered = testLocations.slice(0, destinationsToShow);
+
+            // Apply Coming Soon mystery as ADDITIONAL card
+            if (window.ENABLE_COMING_SOON && destinationsToShow < 50 && filtered.length >= 1) {
+                // Get the next destination after our current visible ones
+                const nextDestinationIndex = destinationsToShow; // 0-based index of next destination
+                const nextActualDestination = testLocations[nextDestinationIndex];
+
+                if (nextActualDestination) {
+                    const comingSoonDestination = createComingSoonDestination(nextActualDestination.id);
+
+                    // ADD mystery as an extra card (don't replace existing ones)
+                    filtered.push(comingSoonDestination);
+
+                    console.log(`🔮 COMING SOON ACTIVE: Added mystery destination as card #${filtered.length}`);
+                    console.log(`   Next actual destination: ${nextActualDestination.state} - ${nextActualDestination.name}`);
+                    console.log(`   Mystery preview: ${comingSoonDestination.description}`);
+                    console.log(`   Current visible: ${destinationsToShow} real + 1 mystery = ${filtered.length} total cards`);
+                }
+            }
+
+            console.log(`\n📍 Expected display (${filtered.length} destinations):`);
+            filtered.forEach((location, index) => {
+                if (location.isComingSoon) {
+                    console.log(`   ${index + 1}. 🔮 ${location.state} - ${location.name} (${location.description})`);
+                } else {
+                    console.log(`   ${index + 1}. ${location.state} - ${location.name} (${location.visitDate})`);
+                }
+            });
+
+            return filtered;
+        }
+
+        // Run the test
+        window.addEventListener('load', () => {
+            console.log('🔧 Environment configuration loaded');
+            console.log('TRAVEL_CONFIG:', window.TRAVEL_CONFIG);
+
+            const result = testFilteredLocations();
+
+            console.log('\n✅ TEST COMPLETE');
+            console.log('Expected behavior:');
+            console.log('- 3 real destinations should be shown (Maine, New Hampshire, Vermont)');
+            console.log('- 4th card should be "Coming Soon" mystery (previewing New York)');
+            console.log('- Tomorrow: 4 real destinations + mystery as 5th card');
+            console.log('- Mystery destination should have purple styling in actual site');
+        });
+    </script>
+</body>
+</html>
