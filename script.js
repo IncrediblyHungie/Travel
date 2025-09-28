@@ -1065,16 +1065,16 @@
                                     pointer-events: none;
                                 "></div>
                                 <div style="position: relative; z-index: 2;">
-                                    <h3 style="text-align: center; color: #FFFFFF; font-weight: 900; font-size: 1.3rem; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.7); letter-spacing: 0.5px;">
+                                    <h3 style="text-align: center !important; color: #FFFFFF !important; font-weight: 900 !important; font-size: 1.3rem !important; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.7) !important; letter-spacing: 0.5px !important; background: none !important; -webkit-background-clip: unset !important; -webkit-text-fill-color: #FFFFFF !important; background-clip: unset !important;">
                                         🔮 ${location.state} - ${location.name}
                                     </h3>
-                                    <p class="visit-date" style="color: #FFFFFF; font-weight: 800; margin-bottom: 10px; font-size: 1.1rem; text-align: center; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.7); letter-spacing: 0.3px;">
+                                    <p class="visit-date" style="color: #FFFFFF !important; font-weight: 800 !important; margin-bottom: 10px !important; font-size: 1.1rem !important; text-align: center !important; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.7) !important; letter-spacing: 0.3px !important;">
                                         ✨ ${location.visitDate}
                                     </p>
-                                    <p class="address" style="color: #FFFFFF; text-align: center; font-style: italic; font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.6);">
+                                    <p class="address" style="color: #FFFFFF !important; text-align: center !important; font-style: italic !important; font-weight: 500 !important; text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.6) !important; opacity: 1 !important;">
                                         ${location.address}
                                     </p>
-                                    <p class="description" style="color: #FFFFFF; text-align: center; font-size: 1.1rem; margin: 15px 0; font-weight: 600; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.7); line-height: 1.4;">
+                                    <p class="description" style="color: #FFFFFF !important; text-align: center !important; font-size: 1.1rem !important; margin: 15px 0 !important; font-weight: 600 !important; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.7) !important; line-height: 1.4 !important; opacity: 1 !important;">
                                         ${location.description}
                                     </p>
                                     <div class="journey-stats" style="
@@ -1087,9 +1087,9 @@
                                         border-radius: 10px;
                                         backdrop-filter: blur(10px);
                                     ">
-                                        <span style="color: #FFFFFF; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.7); letter-spacing: 0.2px;">🌟 Coming Soon</span>
-                                        <span style="color: #FFFFFF; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.7); letter-spacing: 0.2px;">🔮 Mystery</span>
-                                        <span style="color: #FFFFFF; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.7); letter-spacing: 0.2px;">✨ Surprise</span>
+                                        <span style="color: #FFFFFF !important; font-weight: 700 !important; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.7) !important; letter-spacing: 0.2px !important;">🌟 Coming Soon</span>
+                                        <span style="color: #FFFFFF !important; font-weight: 700 !important; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.7) !important; letter-spacing: 0.2px !important;">🔮 Mystery</span>
+                                        <span style="color: #FFFFFF !important; font-weight: 700 !important; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.7) !important; letter-spacing: 0.2px !important;">✨ Surprise</span>
                                     </div>
                                 </div>
                             </div>
