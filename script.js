@@ -697,7 +697,10 @@
             const journeyStart = getJourneyStartDate(); // Sept 29, 2025
 
             // Use test date override if available, otherwise use actual current date
-            const today = window.TEST_DATE_OVERRIDE ? new Date(window.TEST_DATE_OVERRIDE) : new Date();
+            // Force UTC to ensure consistent behavior across timezones
+            const today = window.TEST_DATE_OVERRIDE ?
+                new Date(window.TEST_DATE_OVERRIDE) :
+                new Date(new Date().toISOString().split('T')[0] + 'T12:00:00Z'); // Noon UTC
 
             // Calculate days since journey start
             const daysSinceStart = Math.floor((today - journeyStart) / (1000 * 60 * 60 * 24));
@@ -717,6 +720,12 @@
                 // After journey start - add 1 destination per day
                 destinationsToShow = Math.min(3 + daysSinceStart, 50);
                 console.log(`📈 Day ${daysSinceStart} of journey - showing ${destinationsToShow} destinations`);
+
+                // Safety check: ensure we never show more than available
+                if (destinationsToShow > journeyLocations.length) {
+                    destinationsToShow = journeyLocations.length;
+                    console.log(`⚠️  Capped at ${destinationsToShow} destinations (max available)`);
+                }
             }
 
             if (!ENABLE_LIMITED_VIEW) {
