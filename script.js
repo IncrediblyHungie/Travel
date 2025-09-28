@@ -1,3 +1,26 @@
+        /*
+         * TRAVEL WEBSITE - MAIN APPLICATION SCRIPT
+         * =======================================
+         *
+         * 📚 DEVELOPER DOCS: See DEVELOPER_GUIDE.md for complete architecture guide
+         * 🚀 QUICK TASKS: See QUICK_REFERENCE.md for common modifications
+         *
+         * Key Systems:
+         * - Progressive Reveal: Shows destinations based on current date (lines ~600-700)
+         * - Destinations Data: Massive array with all 50 locations (lines ~60-580)
+         * - Coming Soon Cards: Mystery destinations for unrevealed locations
+         * - Mapbox Integration: Interactive map with markers and routing
+         * - Environment Config: Controlled via env.js and Netlify variables
+         *
+         * Common Modifications:
+         * - Change start date: Update START_DATE_OVERRIDE + destination visitDate fields
+         * - Add destinations: Append to destinations array with proper format
+         * - Adjust reveal timing: Modify ENABLE_LIMITED_VIEW and date calculations
+         *
+         * ⚠️  IMPORTANT: Always test locally before deploying to production
+         * ⚠️  REMEMBER: Netlify env vars override local env.js settings
+         */
+
         // ===== REAL-TIME PROGRESSIVE REVEAL =====
         console.log('📅 REAL-TIME MODE - Using actual current date');
         console.log('🗓️ Today is:', new Date().toDateString());

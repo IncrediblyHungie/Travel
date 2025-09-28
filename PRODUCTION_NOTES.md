@@ -55,3 +55,24 @@ If issues arise, you can:
 - Users see exactly 4 destinations + mystery on Oct 1
 - No console errors
 - Smooth animations and performance
+
+---
+
+## 📚 Developer Documentation
+
+### Quick Help
+- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Common tasks and emergency fixes
+- **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** - Complete architecture and modification guide
+
+### Making Changes
+For any modifications to this travel website:
+1. **Check [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** for common tasks
+2. **Read [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** for detailed procedures
+3. **Test locally** before deploying
+4. **Update documentation** when making changes
+
+### Most Recent Major Change
+**2025-09-28**: Journey start date shifted from September 29th to September 30th
+- Updated environment configuration across all files
+- Modified destination visit dates in script.js
+- Created comprehensive developer documentation
