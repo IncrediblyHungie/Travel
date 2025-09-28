@@ -7,7 +7,7 @@ window.TRAVEL_CONFIG = {
     START_DATE_OVERRIDE: '2025-09-29',
     DAYS_TO_SHOW: 3,
     ENABLE_COMING_SOON: true,   // Set to false to disable "Coming Soon" mystery last destination
-    TEST_DATE_OVERRIDE: '2025-09-30'  // TESTING: Simulate today being September 30th
+    TEST_DATE_OVERRIDE: '2025-10-05'  // TESTING: Simulate today being October 5th
 };
 
 // Apply configuration
