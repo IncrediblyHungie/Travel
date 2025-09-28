@@ -1850,15 +1850,28 @@
 
             // Get current carousel dimensions
             getDimensions() {
-                const isMobile = window.innerWidth <= 768;
+                const width = window.innerWidth;
+                const isMobile = width <= 768;
+                const isTablet = width > 768 && width <= 1024;
+
                 const cardWidth = isMobile ? 280 : 400;
                 const gap = isMobile ? 16 : 32;
+
+                // Dynamic cards to show based on device and total cards
+                let cardsToShow;
+                if (isMobile) {
+                    cardsToShow = 1; // Mobile always shows 1
+                } else if (isTablet && workingLocations.length >= 4) {
+                    cardsToShow = 2; // iPad shows 2 when we have 4+ cards (including mystery)
+                } else {
+                    cardsToShow = Math.min(3, workingLocations.length); // Desktop shows up to 3, but not more than available
+                }
 
                 return {
                     cardWidth,
                     gap,
                     slideWidth: cardWidth + gap,
-                    cardsToShow: isMobile ? 1 : 3,
+                    cardsToShow,
                     totalCards: workingLocations.length
                 };
             }
