@@ -1,3 +1,7 @@
+        // ===== IMMEDIATE DEBUG CHECK =====
+        console.log('🚨 IMMEDIATE CHECK - TEST_DATE_OVERRIDE:', window.TEST_DATE_OVERRIDE);
+        console.log('🚨 IMMEDIATE CHECK - Current date would be:', window.TEST_DATE_OVERRIDE ? new Date(window.TEST_DATE_OVERRIDE) : new Date());
+
         // Custom cursor removed - using default browser cursor
 
         // Generate Particles
@@ -764,9 +768,16 @@
             return filtered;
         }
 
+        // ===== SIMPLE DEBUG CHECKS =====
+        console.log('🔍 SIMPLE DEBUG:');
+        console.log('  TEST_DATE_OVERRIDE from env.js:', window.TEST_DATE_OVERRIDE);
+        console.log('  journeyLocations.length:', journeyLocations.length);
+        console.log('  First few destinations:', journeyLocations.slice(0, 5).map(l => `${l.id}. ${l.state}`));
+
         // Get current working dataset
         const workingLocations = getFilteredLocations();
         console.log('🎯 Working with', workingLocations.length, 'destinations');
+        console.log('🔍 workingLocations summary:', workingLocations.map(l => `${l.id}. ${l.state}${l.isComingSoon ? ' (MYSTERY)' : ''}`));
 
         // Display configuration info
         if (ENABLE_LIMITED_VIEW) {
