@@ -4,7 +4,7 @@
 
 window.TRAVEL_CONFIG = {
     ENABLE_LIMITED_VIEW: true,  // Set to false to show all 50 destinations
-    START_DATE_OVERRIDE: '2025-09-29',
+    START_DATE_OVERRIDE: '2025-09-30',
     DAYS_TO_SHOW: 20,  // High number to not limit progressive reveal
     ENABLE_COMING_SOON: true   // Set to false to disable "Coming Soon" mystery last destination
     // No TEST_DATE_OVERRIDE = uses actual current date for real-time progressive reveal

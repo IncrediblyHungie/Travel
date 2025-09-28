@@ -3,9 +3,9 @@
 ## 🚀 Real-Time Progressive Reveal Status
 
 ### 📅 Current Timeline
-- **Journey Start**: September 29, 2025
+- **Journey Start**: September 30, 2025
 - **Today**: September 28, 2025
-- **Days until launch**: 1 day
+- **Days until launch**: 2 days
 - **Current behavior**: Shows 3 destinations (pre-journey)
 
 ### 🌍 Timezone Handling
@@ -16,10 +16,11 @@
 ### 📊 Progressive Schedule
 ```
 Sept 28, 2025: 3 destinations (pre-journey)
-Sept 29, 2025: 3 destinations (journey start)
-Sept 30, 2025: 4 destinations + mystery
-Oct 1, 2025:   5 destinations + mystery
-Oct 2, 2025:   6 destinations + mystery
+Sept 29, 2025: 3 destinations (pre-journey)
+Sept 30, 2025: 3 destinations (journey start)
+Oct 1, 2025:   4 destinations + mystery
+Oct 2, 2025:   5 destinations + mystery
+Oct 3, 2025:   6 destinations + mystery
 ... continues daily until all 50 shown
 ```
 
@@ -50,6 +51,7 @@ If issues arise, you can:
 ### 🎯 Success Metrics
 - Users see exactly 3 destinations today (Sept 28)
 - Users see exactly 3 destinations tomorrow (Sept 29)
-- Users see exactly 4 destinations + mystery on Sept 30
+- Users see exactly 3 destinations on Sept 30 (journey start)
+- Users see exactly 4 destinations + mystery on Oct 1
 - No console errors
 - Smooth animations and performance
