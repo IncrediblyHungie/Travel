@@ -1065,16 +1065,16 @@
                                     pointer-events: none;
                                 "></div>
                                 <div style="position: relative; z-index: 2;">
-                                    <h3 style="text-align: center; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                                    <h3 style="text-align: center; color: #FFFFFF; font-weight: 900; font-size: 1.3rem; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.7); letter-spacing: 0.5px;">
                                         🔮 ${location.state} - ${location.name}
                                     </h3>
-                                    <p class="visit-date" style="color: #FFD700; font-weight: 600; margin-bottom: 10px; font-size: 1.1rem; text-align: center; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                                    <p class="visit-date" style="color: #FFFFFF; font-weight: 800; margin-bottom: 10px; font-size: 1.1rem; text-align: center; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.7); letter-spacing: 0.3px;">
                                         ✨ ${location.visitDate}
                                     </p>
-                                    <p class="address" style="color: rgba(255,255,255,0.9); text-align: center; font-style: italic;">
+                                    <p class="address" style="color: #FFFFFF; text-align: center; font-style: italic; font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.6);">
                                         ${location.address}
                                     </p>
-                                    <p class="description" style="color: white; text-align: center; font-size: 1.1rem; margin: 15px 0; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                                    <p class="description" style="color: #FFFFFF; text-align: center; font-size: 1.1rem; margin: 15px 0; font-weight: 600; text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.7); line-height: 1.4;">
                                         ${location.description}
                                     </p>
                                     <div class="journey-stats" style="
@@ -1087,9 +1087,9 @@
                                         border-radius: 10px;
                                         backdrop-filter: blur(10px);
                                     ">
-                                        <span style="color: #FFD700;">🌟 Coming Soon</span>
-                                        <span style="color: #FFD700;">🔮 Mystery</span>
-                                        <span style="color: #FFD700;">✨ Surprise</span>
+                                        <span style="color: #FFFFFF; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.7); letter-spacing: 0.2px;">🌟 Coming Soon</span>
+                                        <span style="color: #FFFFFF; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.7); letter-spacing: 0.2px;">🔮 Mystery</span>
+                                        <span style="color: #FFFFFF; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.7); letter-spacing: 0.2px;">✨ Surprise</span>
                                     </div>
                                 </div>
                             </div>
