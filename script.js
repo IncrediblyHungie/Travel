@@ -1669,8 +1669,11 @@
             name.textContent = location.name;
             if (location.isComingSoon) {
                 name.style.cssText = `
-                    color: #FFD700;
-                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+                    color: #FFFFFF;
+                    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 1px 4px rgba(0, 0, 0, 0.7);
+                    font-weight: 900;
+                    font-size: 1.3rem;
+                    letter-spacing: 0.5px;
                 `;
                 name.textContent = '🔮 ' + location.name;
             }
@@ -1682,8 +1685,11 @@
             state.textContent = location.state;
             if (location.isComingSoon) {
                 state.style.cssText = `
-                    color: rgba(255, 255, 255, 0.9);
-                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+                    color: #FFFFFF;
+                    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.7);
+                    font-weight: 700;
+                    font-size: 1.1rem;
+                    letter-spacing: 0.3px;
                 `;
                 state.textContent = '✨ ' + location.state;
             }
@@ -1695,10 +1701,12 @@
             description.textContent = location.description;
             if (location.isComingSoon) {
                 description.style.cssText = `
-                    color: white;
-                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+                    color: #FFFFFF;
+                    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.7);
                     font-style: italic;
                     font-size: 1.1rem;
+                    font-weight: 500;
+                    line-height: 1.4;
                 `;
             }
             content.appendChild(description);
@@ -1709,9 +1717,11 @@
             if (location.isComingSoon) {
                 visitDate.textContent = `✨ ${location.visitDate}`;
                 visitDate.style.cssText = `
-                    color: #FFD700;
-                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-                    font-weight: 700;
+                    color: #FFFFFF;
+                    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.7);
+                    font-weight: 800;
+                    font-size: 1.05rem;
+                    letter-spacing: 0.2px;
                 `;
             } else {
                 visitDate.textContent = `📅 ${location.visitDate}`;
@@ -1735,8 +1745,11 @@
                     span.className = 'travel-time mystery-detail';
                     span.textContent = `${detail.icon} ${detail.text}`;
                     span.style.cssText = `
-                        color: #FFD700;
-                        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+                        color: #FFFFFF;
+                        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.7);
+                        font-weight: 600;
+                        font-size: 0.95rem;
+                        letter-spacing: 0.2px;
                     `;
                     details.appendChild(span);
                 });
