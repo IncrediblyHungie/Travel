@@ -723,10 +723,14 @@
             console.log(`🎯 PROGRESSIVE REVEAL ACTIVE:`);
             console.log(`   Journey start: ${journeyStart.toDateString()}`);
             console.log(`   Today: ${today.toDateString()}${window.TEST_DATE_OVERRIDE ? ' (SIMULATED FOR TESTING)' : ''}`);
+            console.log(`   Time difference (ms): ${today - journeyStart}`);
             console.log(`   Days since start: ${daysSinceStart}`);
+            console.log(`   Calculation: 3 + ${daysSinceStart} = ${3 + daysSinceStart}`);
             console.log(`   Destinations to show: ${destinationsToShow}/50`);
+            console.log(`   ⚠️  DAYS_TO_SHOW config: ${DAYS_TO_SHOW} (should NOT affect progressive reveal)`);
 
             let filtered = journeyLocations.slice(0, destinationsToShow);
+            console.log(`📍 After slice(0, ${destinationsToShow}): ${filtered.length} destinations`);
 
             // Apply "Coming Soon" mystery as an ADDITIONAL card (unless showing all 50)
             if (ENABLE_COMING_SOON && destinationsToShow < 50 && filtered.length >= 1) {
@@ -756,6 +760,7 @@
                 }
             });
 
+            console.log(`🔥 FINAL RESULT: Returning ${filtered.length} total destinations (${filtered.filter(l => !l.isComingSoon).length} real + ${filtered.filter(l => l.isComingSoon).length} mystery)`);
             return filtered;
         }
 

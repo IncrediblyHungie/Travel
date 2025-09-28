@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Date Calculation</title>
+    <script src="env.js"></script>
+</head>
+<body>
+    <h1>🐛 Debug Date Calculation</h1>
+    <p>Check console for detailed date calculation results</p>
+
+    <script>
+        function debugDateCalculation() {
+            console.log('🐛 DEBUGGING DATE CALCULATION');
+            console.log('===============================');
+
+            // Get the configuration
+            console.log('📋 Configuration:');
+            console.log('  TRAVEL_CONFIG:', window.TRAVEL_CONFIG);
+            console.log('  START_DATE_OVERRIDE:', window.START_DATE_OVERRIDE);
+            console.log('  TEST_DATE_OVERRIDE:', window.TEST_DATE_OVERRIDE);
+            console.log('  DAYS_TO_SHOW:', window.DAYS_TO_SHOW);
+            console.log('  ENABLE_LIMITED_VIEW:', window.ENABLE_LIMITED_VIEW);
+
+            // Test the date logic (copy from script.js)
+            function getJourneyStartDate() {
+                return new Date(window.START_DATE_OVERRIDE || '2025-09-29');
+            }
+
+            const journeyStart = getJourneyStartDate();
+            const today = window.TEST_DATE_OVERRIDE ? new Date(window.TEST_DATE_OVERRIDE) : new Date();
+
+            console.log('\n📅 Date Calculation:');
+            console.log('  Journey start:', journeyStart);
+            console.log('  Journey start string:', journeyStart.toDateString());
+            console.log('  Today (simulated):', today);
+            console.log('  Today string:', today.toDateString());
+
+            // Calculate days since start
+            const timeDiff = today - journeyStart;
+            console.log('  Time difference (ms):', timeDiff);
+
+            const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+            console.log('  Days difference (exact):', daysDiff);
+
+            const daysSinceStart = Math.floor(daysDiff);
+            console.log('  Days since start (floored):', daysSinceStart);
+
+            // Test the destinations calculation
+            let destinationsToShow;
+            if (daysSinceStart < 0) {
+                destinationsToShow = 3;
+                console.log('  → Before journey start - showing first 3 destinations');
+            } else if (daysSinceStart === 0) {
+                destinationsToShow = 3;
+                console.log('  → Journey start day! Showing 3 destinations');
+            } else {
+                destinationsToShow = Math.min(3 + daysSinceStart, 50);
+                console.log(`  → Day ${daysSinceStart} of journey - showing ${destinationsToShow} destinations`);
+            }
+
+            console.log('\n🎯 EXPECTED RESULTS:');
+            console.log(`  Real destinations: ${destinationsToShow}`);
+            console.log(`  Mystery card: 1`);
+            console.log(`  Total cards: ${destinationsToShow + 1}`);
+
+            // Test if DAYS_TO_SHOW is interfering
+            console.log('\n⚠️  POTENTIAL INTERFERENCE:');
+            console.log(`  DAYS_TO_SHOW setting: ${window.DAYS_TO_SHOW}`);
+            console.log(`  This should NOT limit the progressive reveal!`);
+
+            return {
+                journeyStart,
+                today,
+                daysSinceStart,
+                destinationsToShow,
+                totalCards: destinationsToShow + 1
+            };
+        }
+
+        // Run debug when page loads
+        window.addEventListener('load', () => {
+            const result = debugDateCalculation();
+
+            console.log('\n🔍 SUMMARY:');
+            if (result.daysSinceStart === 6 && result.destinationsToShow === 9) {
+                console.log('✅ Date calculation is CORRECT');
+                console.log('❌ Problem must be elsewhere in the filtering logic');
+            } else {
+                console.log('❌ Date calculation is WRONG');
+                console.log('   Expected: 6 days since start, 9 destinations');
+                console.log(`   Actual: ${result.daysSinceStart} days since start, ${result.destinationsToShow} destinations`);
+            }
+        });
+    </script>
+</body>
+</html>
