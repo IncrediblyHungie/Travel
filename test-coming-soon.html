@@ -21,12 +21,13 @@
             return new Date('2025-09-29'); // Default journey start
         }
 
-        // Create a minimal set of test locations
+        // Create a minimal set of test locations (with coordinates for mystery offset)
         const testLocations = [
             {
                 id: 1,
                 state: "Maine",
                 name: "Cadillac Mountain",
+                coordinates: [-68.2251, 44.3527],
                 visitDate: "September 29, 2025",
                 description: "First light in America"
             },
@@ -34,6 +35,7 @@
                 id: 2,
                 state: "New Hampshire",
                 name: "Mount Washington",
+                coordinates: [-71.3032, 44.2706],
                 visitDate: "September 30, 2025",
                 description: "Above the clouds"
             },
@@ -41,6 +43,7 @@
                 id: 3,
                 state: "Vermont",
                 name: "Stowe Pinnacle",
+                coordinates: [-72.7103, 44.4669],
                 visitDate: "October 1, 2025",
                 description: "Green Mountains"
             },
@@ -48,25 +51,39 @@
                 id: 4,
                 state: "New York",
                 name: "Whiteface Mountain",
+                coordinates: [-73.9026, 44.3659],
                 visitDate: "October 2, 2025",
                 description: "Adirondack peak"
             }
         ];
 
-        // Create Coming Soon destination function
-        function createComingSoonDestination(actualDestinationNumber) {
+        // Create Coming Soon destination function (updated to match main script)
+        function createComingSoonDestination(nextActualDestination) {
             const mysteryMessages = [
                 "The next adventure awaits...",
                 "A hidden gem yet to be revealed...",
                 "Mystery destination unlocking soon..."
             ];
 
+            // Smart mystery coordinates: Use actual next destination as base with offset
+            const [baseLng, baseLat] = nextActualDestination.coordinates || [-74.0, 43.0]; // Default to NY area if no coords
+
+            // Create deterministic but obscured offset using destination ID as seed
+            const seed = nextActualDestination.id * 12345;
+            const offsetLng = ((seed % 100) / 100 - 0.5) * 0.8; // ±0.4 degrees longitude
+            const offsetLat = ((seed % 73) / 73 - 0.5) * 0.6;   // ±0.3 degrees latitude
+
+            const mysteryCoordinates = [
+                baseLng + offsetLng,
+                baseLat + offsetLat
+            ];
+
             return {
-                id: actualDestinationNumber,
+                id: nextActualDestination.id,
                 state: "Coming Soon",
                 name: "Mystery Destination",
                 address: "Somewhere in America",
-                coordinates: [-98.5, 39.5],
+                coordinates: mysteryCoordinates,
                 visitDate: "Soon",
                 description: mysteryMessages[Math.floor(Math.random() * mysteryMessages.length)],
                 isComingSoon: true
@@ -114,7 +131,7 @@
                 const nextActualDestination = testLocations[nextDestinationIndex];
 
                 if (nextActualDestination) {
-                    const comingSoonDestination = createComingSoonDestination(nextActualDestination.id);
+                    const comingSoonDestination = createComingSoonDestination(nextActualDestination);
 
                     // ADD mystery as an extra card (don't replace existing ones)
                     filtered.push(comingSoonDestination);

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Mystery Coordinates Fix</title>
+</head>
+<body>
+    <h1>🗺️ Mystery Coordinate Offset Test</h1>
+    <p>Testing the fix for mystery marker placement (Vermont → New York area instead of Kansas)</p>
+    <p>Check browser console for coordinate calculations</p>
+
+    <div style="background: #f0f8ff; padding: 20px; border-radius: 10px; margin: 20px 0;">
+        <h3>Expected Results:</h3>
+        <ul>
+            <li><strong>Actual New York location:</strong> [-73.9026, 44.3659] (Whiteface Mountain)</li>
+            <li><strong>Mystery marker:</strong> Should be within ~20-50 miles of New York</li>
+            <li><strong>Old behavior:</strong> Mystery in Kansas [-98.5, 39.5] ❌</li>
+            <li><strong>New behavior:</strong> Mystery near Vermont/New York border ✅</li>
+        </ul>
+    </div>
+
+    <script>
+        function testMysteryCoordinates() {
+            console.log('🧪 TESTING MYSTERY COORDINATE OFFSET');
+            console.log('======================================');
+
+            // Simulate the actual next destination (New York - Whiteface Mountain)
+            const nextActualDestination = {
+                id: 4,
+                state: "New York",
+                name: "Whiteface Mountain",
+                coordinates: [-73.9026, 44.3659] // Actual coordinates
+            };
+
+            console.log('📍 Actual next destination:');
+            console.log(`   ${nextActualDestination.state} - ${nextActualDestination.name}`);
+            console.log(`   Coordinates: [${nextActualDestination.coordinates[0]}, ${nextActualDestination.coordinates[1]}]`);
+
+            // Apply the same offset logic as the main script
+            const [baseLng, baseLat] = nextActualDestination.coordinates;
+
+            // Create deterministic but obscured offset using destination ID as seed
+            const seed = nextActualDestination.id * 12345; // 4 * 12345 = 49380
+            const offsetLng = ((seed % 100) / 100 - 0.5) * 0.8; // ±0.4 degrees longitude
+            const offsetLat = ((seed % 73) / 73 - 0.5) * 0.6;   // ±0.3 degrees latitude
+
+            const mysteryCoordinates = [
+                baseLng + offsetLng,
+                baseLat + offsetLat
+            ];
+
+            console.log('\n🔮 Mystery coordinate calculation:');
+            console.log(`   Seed: ${seed}`);
+            console.log(`   Longitude offset: ${offsetLng.toFixed(4)} degrees`);
+            console.log(`   Latitude offset: ${offsetLat.toFixed(4)} degrees`);
+            console.log(`   Mystery coordinates: [${mysteryCoordinates[0].toFixed(4)}, ${mysteryCoordinates[1].toFixed(4)}]`);
+
+            // Calculate approximate distance
+            const lngDiff = Math.abs(mysteryCoordinates[0] - baseLng);
+            const latDiff = Math.abs(mysteryCoordinates[1] - baseLat);
+            const approximateDistance = Math.sqrt(lngDiff * lngDiff + latDiff * latDiff) * 69; // Rough miles conversion
+
+            console.log(`\n📏 Distance analysis:`);
+            console.log(`   Longitude difference: ${lngDiff.toFixed(4)} degrees`);
+            console.log(`   Latitude difference: ${latDiff.toFixed(4)} degrees`);
+            console.log(`   Approximate distance: ${approximateDistance.toFixed(1)} miles`);
+
+            // Compare to old Kansas location
+            const oldKansasCoords = [-98.5, 39.5];
+            const distanceFromKansas = Math.sqrt(
+                Math.pow(nextActualDestination.coordinates[0] - oldKansasCoords[0], 2) +
+                Math.pow(nextActualDestination.coordinates[1] - oldKansasCoords[1], 2)
+            ) * 69;
+
+            console.log(`\n📊 Comparison:`);
+            console.log(`   OLD (Kansas): [${oldKansasCoords[0]}, ${oldKansasCoords[1]}]`);
+            console.log(`   Distance from actual: ${distanceFromKansas.toFixed(0)} miles ❌`);
+            console.log(`   NEW (Offset): [${mysteryCoordinates[0].toFixed(4)}, ${mysteryCoordinates[1].toFixed(4)}]`);
+            console.log(`   Distance from actual: ${approximateDistance.toFixed(1)} miles ✅`);
+
+            console.log('\n✅ RESULTS:');
+            if (approximateDistance < 100 && approximateDistance > 10) {
+                console.log('🎉 SUCCESS! Mystery coordinates are in reasonable range (10-100 miles)');
+            } else if (approximateDistance <= 10) {
+                console.log('⚠️  WARNING: Mystery coordinates too close - might reveal exact location');
+            } else {
+                console.log('⚠️  WARNING: Mystery coordinates too far - might be misleading');
+            }
+
+            // Test consistency (same input should give same output)
+            const testAgain = [
+                baseLng + ((seed % 100) / 100 - 0.5) * 0.8,
+                baseLat + ((seed % 73) / 73 - 0.5) * 0.6
+            ];
+
+            const isConsistent = (
+                Math.abs(testAgain[0] - mysteryCoordinates[0]) < 0.0001 &&
+                Math.abs(testAgain[1] - mysteryCoordinates[1]) < 0.0001
+            );
+
+            console.log(`\n🔄 Consistency test: ${isConsistent ? '✅ PASS' : '❌ FAIL'}`);
+            console.log('   Mystery coordinates will be the same each time for this destination');
+
+            return mysteryCoordinates;
+        }
+
+        // Run test when page loads
+        window.addEventListener('load', () => {
+            testMysteryCoordinates();
+        });
+    </script>
+</body>
+</html>

@@ -649,7 +649,7 @@
         }
 
         // Create a mystery "Coming Soon" destination object
-        function createComingSoonDestination(actualDestinationNumber) {
+        function createComingSoonDestination(nextActualDestination) {
             const mysteryMessages = [
                 "The next adventure awaits...",
                 "A hidden gem yet to be revealed...",
@@ -661,11 +661,21 @@
                 "Discovering America, one day at a time..."
             ];
 
-            // Use center of continental US as mystery coordinates
-            const mysteryCoordinates = [-98.5, 39.5];
+            // Smart mystery coordinates: Use actual next destination as base with offset
+            const [baseLng, baseLat] = nextActualDestination.coordinates;
+
+            // Create deterministic but obscured offset using destination ID as seed
+            const seed = nextActualDestination.id * 12345; // Simple seed multiplication
+            const offsetLng = ((seed % 100) / 100 - 0.5) * 0.8; // ±0.4 degrees longitude (~20-30 miles)
+            const offsetLat = ((seed % 73) / 73 - 0.5) * 0.6;   // ±0.3 degrees latitude (~20-25 miles)
+
+            const mysteryCoordinates = [
+                baseLng + offsetLng,
+                baseLat + offsetLat
+            ];
 
             return {
-                id: actualDestinationNumber,
+                id: nextActualDestination.id,
                 state: "Coming Soon",
                 name: "Mystery Destination",
                 address: "Somewhere in America",
@@ -725,7 +735,7 @@
                 const nextActualDestination = journeyLocations[nextDestinationIndex];
 
                 if (nextActualDestination) {
-                    const comingSoonDestination = createComingSoonDestination(nextActualDestination.id);
+                    const comingSoonDestination = createComingSoonDestination(nextActualDestination);
 
                     // ADD mystery as an extra card (don't replace existing ones)
                     filtered.push(comingSoonDestination);
