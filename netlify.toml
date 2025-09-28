@@ -6,7 +6,8 @@
   ENABLE_LIMITED_VIEW = "true"
   START_DATE_OVERRIDE = "2025-09-29"
   DAYS_TO_SHOW = "20"
-  TEST_DATE_OVERRIDE = "2025-10-05"
+  ENABLE_COMING_SOON = "true"
+  # No TEST_DATE_OVERRIDE = uses actual current date for real-time progressive reveal
 
 # Redirect rules (optional)
 [[redirects]]

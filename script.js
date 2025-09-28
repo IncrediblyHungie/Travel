@@ -1,6 +1,6 @@
-        // ===== IMMEDIATE DEBUG CHECK =====
-        console.log('🚨 IMMEDIATE CHECK - TEST_DATE_OVERRIDE:', window.TEST_DATE_OVERRIDE);
-        console.log('🚨 IMMEDIATE CHECK - Current date would be:', window.TEST_DATE_OVERRIDE ? new Date(window.TEST_DATE_OVERRIDE) : new Date());
+        // ===== REAL-TIME PROGRESSIVE REVEAL =====
+        console.log('📅 REAL-TIME MODE - Using actual current date');
+        console.log('🗓️ Today is:', new Date().toDateString());
 
         // Custom cursor removed - using default browser cursor
 
@@ -724,14 +724,14 @@
                 return journeyLocations;
             }
 
-            console.log(`🎯 PROGRESSIVE REVEAL ACTIVE:`);
+            console.log(`🎯 PROGRESSIVE REVEAL ACTIVE (REAL-TIME):`);
             console.log(`   Journey start: ${journeyStart.toDateString()}`);
-            console.log(`   Today: ${today.toDateString()}${window.TEST_DATE_OVERRIDE ? ' (SIMULATED FOR TESTING)' : ''}`);
+            console.log(`   Today: ${today.toDateString()}`);
             console.log(`   Time difference (ms): ${today - journeyStart}`);
             console.log(`   Days since start: ${daysSinceStart}`);
             console.log(`   Calculation: 3 + ${daysSinceStart} = ${3 + daysSinceStart}`);
             console.log(`   Destinations to show: ${destinationsToShow}/50`);
-            console.log(`   ⚠️  DAYS_TO_SHOW config: ${DAYS_TO_SHOW} (should NOT affect progressive reveal)`);
+            console.log(`   📈 New destinations unlock automatically each day!`);
 
             let filtered = journeyLocations.slice(0, destinationsToShow);
             console.log(`📍 After slice(0, ${destinationsToShow}): ${filtered.length} destinations`);
