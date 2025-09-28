@@ -75,7 +75,7 @@
                 coordinates: [-68.2251, 44.3527],
                 driveTime: "0",
                 hikeTime: "0",
-                visitDate: "September 29, 2025",
+                visitDate: "September 30, 2025",
                 description: "First light in America - the journey begins at the highest point along the North Atlantic seaboard"
             },
             {
@@ -86,7 +86,7 @@
                 coordinates: [-71.3032, 44.2706],
                 driveTime: "2h 46min",
                 hikeTime: "0",
-                visitDate: "September 30, 2025",
+                visitDate: "October 1, 2025",
                 description: "Above the clouds on the Northeast's highest peak"
             },
             {
@@ -97,7 +97,7 @@
                 coordinates: [-72.7103, 44.4669],
                 driveTime: "2h 52min",
                 hikeTime: "1h",
-                visitDate: "October 1, 2025",
+                visitDate: "October 2, 2025",
                 description: "Vermont's Green Mountains painted in sunset colors"
             },
             {
@@ -108,7 +108,7 @@
                 coordinates: [-73.9026, 44.3659],
                 driveTime: "2h 41min",
                 hikeTime: "5min",
-                visitDate: "October 2, 2025",
+                visitDate: "October 5, 2025",
                 description: "Adirondack wilderness and Olympic history"
             },
             {
@@ -119,7 +119,7 @@
                 coordinates: [-70.1873, 42.0584],
                 driveTime: "7h",
                 hikeTime: "0",
-                visitDate: "September 30, 2025",
+                visitDate: "October 1, 2025",
                 description: "Atlantic Ocean sunset at the tip of Cape Cod"
             },
             {
@@ -130,7 +130,7 @@
                 coordinates: [-71.3977, 41.4510],
                 driveTime: "1h 30min",
                 hikeTime: "0",
-                visitDate: "October 1, 2025",
+                visitDate: "October 2, 2025",
                 description: "Ocean State's dramatic coastal mansions and lighthouse views"
             },
             {
@@ -141,7 +141,7 @@
                 coordinates: [-72.5481, 41.2787],
                 driveTime: "1h 45min",
                 hikeTime: "0",
-                visitDate: "October 2, 2025",
+                visitDate: "October 5, 2025",
                 description: "Constitution State's longest shoreline with Long Island Sound views"
             },
             {
@@ -152,7 +152,7 @@
                 coordinates: [-74.8279, 40.8584],
                 driveTime: "3h",
                 hikeTime: "0",
-                visitDate: "October 3, 2025",
+                visitDate: "October 5, 2025",
                 description: "Garden State scenic overlook along the historic highway"
             },
             {
@@ -163,7 +163,7 @@
                 coordinates: [-75.1085, 38.6990],
                 driveTime: "2h",
                 hikeTime: "0",
-                visitDate: "October 4, 2025",
+                visitDate: "October 5, 2025",
                 description: "First State's hidden scenic viewpoint and countryside"
             },
             {
