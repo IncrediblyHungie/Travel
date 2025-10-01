@@ -7,10 +7,10 @@ echo "🔧 Generating environment configuration..."
 cat > env.js << EOF
 // Environment configuration - Generated during build
 window.TRAVEL_CONFIG = {
-    ENABLE_LIMITED_VIEW: ${ENABLE_LIMITED_VIEW:-true},
+    ENABLE_LIMITED_VIEW: ${ENABLE_LIMITED_VIEW:-false},
     START_DATE_OVERRIDE: '${START_DATE_OVERRIDE:-2025-09-30}',
     DAYS_TO_SHOW: ${DAYS_TO_SHOW:-20},
-    ENABLE_COMING_SOON: ${ENABLE_COMING_SOON:-true}
+    ENABLE_COMING_SOON: ${ENABLE_COMING_SOON:-false}
     // No TEST_DATE_OVERRIDE = uses actual current date for real-time progressive reveal
 };
 

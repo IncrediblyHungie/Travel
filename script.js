@@ -647,8 +647,8 @@
         // Environment variable support for Netlify configuration
         const DAYS_TO_SHOW = parseInt(window.DAYS_TO_SHOW || 3); // Default: 3 days
         const START_DATE_OVERRIDE = window.START_DATE_OVERRIDE || '2025-09-29'; // Default: September 29, 2025 (journey beginning)
-        const ENABLE_LIMITED_VIEW = window.ENABLE_LIMITED_VIEW !== 'false'; // Default: true, set to 'false' to show all 50 destinations
-        const ENABLE_COMING_SOON = window.ENABLE_COMING_SOON !== 'false'; // Default: true, set to 'false' to disable mystery last destination
+        const ENABLE_LIMITED_VIEW = !(window.ENABLE_LIMITED_VIEW === false || window.ENABLE_LIMITED_VIEW === 'false'); // Default: true, set to false to show all 50 destinations
+        const ENABLE_COMING_SOON = !(window.ENABLE_COMING_SOON === false || window.ENABLE_COMING_SOON === 'false'); // Default: true, set to false to disable mystery last destination
 
         // Date filtering logic
         function parseVisitDate(visitDateString) {
