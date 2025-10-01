@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Consecutive Dates - October 1st Start</title>
+    <script src="env.js"></script>
+</head>
+<body>
+    <h1>🗓️ Testing Consecutive Dates Starting October 1st</h1>
+    <p>Testing destination dates to ensure they start October 1st and are consecutive</p>
+    <p>Check browser console for detailed results</p>
+
+    <div style="background: #f0f8ff; padding: 20px; border-radius: 10px; margin: 20px 0;">
+        <h3>Expected Results:</h3>
+        <ul>
+            <li><strong>Maine:</strong> October 1, 2025 (journey start)</li>
+            <li><strong>New Hampshire:</strong> October 2, 2025</li>
+            <li><strong>Vermont:</strong> October 3, 2025</li>
+            <li><strong>New York:</strong> October 4, 2025</li>
+            <li><strong>Massachusetts:</strong> October 5, 2025</li>
+            <li><strong>Rhode Island:</strong> October 6, 2025</li>
+            <li><strong>Connecticut:</strong> October 7, 2025</li>
+            <li><strong>New Jersey:</strong> October 8, 2025</li>
+            <li><strong>Delaware:</strong> October 9, 2025</li>
+            <li><strong>Pennsylvania:</strong> October 10, 2025</li>
+            <li><strong>Maryland:</strong> October 11, 2025</li>
+            <li><strong>Ohio:</strong> October 12, 2025</li>
+        </ul>
+
+        <h4>Status:</h4>
+        <p><strong>✅ Updated:</strong> First 12 destinations (Maine through Ohio)</p>
+        <p><strong>⏳ Pending:</strong> Destinations 13-50 need consecutive date updates</p>
+    </div>
+
+    <script>
+        // Load the destinations from the main script
+        const script = document.createElement('script');
+        script.src = 'script.js';
+        script.onload = function() {
+            testConsecutiveDates();
+        };
+        document.head.appendChild(script);
+
+        function testConsecutiveDates() {
+            console.log('🧪 TESTING CONSECUTIVE DATES STARTING OCTOBER 1ST');
+            console.log('=================================================');
+
+            // Get destinations from the main script
+            if (typeof journeyLocations === 'undefined') {
+                console.error('❌ journeyLocations not found. Make sure script.js loads correctly.');
+                return;
+            }
+
+            console.log(`📍 Total destinations found: ${journeyLocations.length}`);
+
+            // Check first 12 destinations for consecutive dates
+            const expectedDates = [
+                'October 1, 2025',   // Maine
+                'October 2, 2025',   // New Hampshire
+                'October 3, 2025',   // Vermont
+                'October 4, 2025',   // New York
+                'October 5, 2025',   // Massachusetts
+                'October 6, 2025',   // Rhode Island
+                'October 7, 2025',   // Connecticut
+                'October 8, 2025',   // New Jersey
+                'October 9, 2025',   // Delaware
+                'October 10, 2025',  // Pennsylvania
+                'October 11, 2025',  // Maryland
+                'October 12, 2025'   // Ohio
+            ];
+
+            console.log('\n📅 CHECKING FIRST 12 DESTINATIONS:');
+            console.log('==================================');
+
+            let allCorrect = true;
+            for (let i = 0; i < Math.min(12, journeyLocations.length); i++) {
+                const destination = journeyLocations[i];
+                const expected = expectedDates[i];
+                const actual = destination.visitDate;
+                const isCorrect = actual === expected;
+
+                if (isCorrect) {
+                    console.log(`✅ ${i + 1}. ${destination.state}: ${actual}`);
+                } else {
+                    console.log(`❌ ${i + 1}. ${destination.state}: Expected "${expected}", got "${actual}"`);
+                    allCorrect = false;
+                }
+            }
+
+            console.log('\n📊 SUMMARY:');
+            console.log('===========');
+            if (allCorrect) {
+                console.log('🎉 SUCCESS! First 12 destinations have consecutive dates starting October 1st');
+            } else {
+                console.log('⚠️  Some dates need correction');
+            }
+
+            // Check remaining destinations
+            console.log('\n🔍 REMAINING DESTINATIONS (13-50):');
+            console.log('=================================');
+            for (let i = 12; i < journeyLocations.length; i++) {
+                const destination = journeyLocations[i];
+                console.log(`${i + 1}. ${destination.state}: ${destination.visitDate}`);
+            }
+
+            // Show if progressive reveal is disabled
+            console.log('\n🛠️  CONFIGURATION:');
+            console.log('==================');
+            console.log(`ENABLE_LIMITED_VIEW: ${window.ENABLE_LIMITED_VIEW}`);
+            console.log(`ENABLE_COMING_SOON: ${window.ENABLE_COMING_SOON}`);
+            console.log('With limited view disabled, all destinations should show immediately.');
+
+            console.log('\n✅ TEST COMPLETE');
+            console.log('================');
+            console.log('Check the results above to verify consecutive dates.');
+            console.log('If first 12 destinations are correct, ready to fix remaining destinations 13-50.');
+        }
+    </script>
+</body>
+</html>
