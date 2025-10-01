@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tour Dates Layout</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="env.js"></script>
+</head>
+<body>
+    <section class="tour-dates">
+        <div class="tour-header">
+            <p class="section-label">Featured Destinations</p>
+            <h2 class="section-title">Where Dreams Meet Reality</h2>
+        </div>
+
+        <div class="dates-container">
+            <div class="dates-list" id="tour-dates-list">
+                <!-- Test rows to visualize the layout -->
+                <div class="tour-date-row">
+                    <div class="date-number">01</div>
+                    <div class="location-info">
+                        <div class="location-name">
+                            <span class="tour-state">Maine</span> - Cadillac Mountain
+                        </div>
+                    </div>
+                    <div class="date-text">October 1, 2025</div>
+                    <div class="date-description">First light in America - the journey begins at the highest point along the North Atlantic seaboard</div>
+                </div>
+
+                <div class="tour-date-row even-row">
+                    <div class="date-number">02</div>
+                    <div class="location-info">
+                        <div class="location-name">
+                            <span class="tour-state">New Hampshire</span> - Mount Washington
+                        </div>
+                    </div>
+                    <div class="date-text">October 2, 2025</div>
+                    <div class="date-description">Above the clouds on the Northeast's highest peak</div>
+                </div>
+
+                <div class="tour-date-row">
+                    <div class="date-number">03</div>
+                    <div class="location-info">
+                        <div class="location-name">
+                            <span class="tour-state">Vermont</span> - Stowe Pinnacle
+                        </div>
+                    </div>
+                    <div class="date-text">October 3, 2025</div>
+                    <div class="date-description">Vermont's Green Mountains painted in sunset colors</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        console.log('Tour Dates Test Page - Check the layout above');
+        console.log('Expected: Clean list of tour dates with alternating backgrounds');
+        console.log('Features: Date number, Location (State - Name), Date, Description');
+    </script>
+</body>
+</html>

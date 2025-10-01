@@ -68,7 +68,7 @@
         // Smooth scroll for nav cards
         document.querySelectorAll('.nav-card').forEach((card, index) => {
             card.addEventListener('click', () => {
-                const sections = ['.gallery', '.map-section'];
+                const sections = ['.tour-dates', '.map-section'];
                 const target = document.querySelector(sections[index] || 'body');
                 if (target) {
                     target.scrollIntoView({ behavior: 'smooth' });
@@ -1602,43 +1602,62 @@
             }
         }
 
-        // Optimized card generation with lazy loading for mobile performance
-        function generateDestinationCards() {
-            const track = document.getElementById('destinations-track');
-            const gradients = [
-                'linear-gradient(135deg, #1a1a2e, #16213e)',
-                'linear-gradient(135deg, #0f3443, #34e89e)',
-                'linear-gradient(135deg, #373b44, #4286f4)',
-                'linear-gradient(135deg, #243949, #517fa4)',
-                'linear-gradient(135deg, #553d67, #f64f59)',
-                'linear-gradient(135deg, #4b134f, #c94b4b)',
-                'linear-gradient(135deg, #2c3e50, #3498db)',
-                'linear-gradient(135deg, #8e2de2, #4a00e0)',
-                'linear-gradient(135deg, #ff6b6b, #feca57)',
-                'linear-gradient(135deg, #48cae4, #023e8a)'
-            ];
+        // Generate tour dates list instead of cards
+        function generateTourDates() {
+            const datesList = document.getElementById('tour-dates-list');
+            if (!datesList) return;
 
-            const isMobile = window.innerWidth <= 768;
-            const initialLoad = isMobile ? Math.min(25, workingLocations.length) : Math.min(20, workingLocations.length); // Load most/all cards initially on mobile for instant response
+            // Clear existing content
+            datesList.innerHTML = '';
 
-            // Create initial batch of cards for immediate display
-            const fragment = document.createDocumentFragment();
+            // Create tour date rows for all locations
+            workingLocations.forEach((location, index) => {
+                const dateRow = createTourDateRow(location, index);
+                datesList.appendChild(dateRow);
+            });
+        }
 
-            for (let i = 0; i < Math.min(initialLoad, workingLocations.length); i++) {
-                const card = createOptimizedCard(workingLocations[i], gradients[i % gradients.length], i);
-                fragment.appendChild(card);
+        // Create a single tour date row
+        function createTourDateRow(location, index) {
+            const row = document.createElement('div');
+            row.className = 'tour-date-row';
+
+            // Add alternating background for readability
+            if (index % 2 === 0) {
+                row.classList.add('even-row');
             }
 
-            track.appendChild(fragment);
+            // Create date number
+            const dateNumber = document.createElement('div');
+            dateNumber.className = 'date-number';
+            dateNumber.textContent = (index + 1).toString().padStart(2, '0');
+            row.appendChild(dateNumber);
 
-            // Load remaining cards immediately on mobile for instant numbers
-            if (isMobile && workingLocations.length > initialLoad) {
-                // Load remaining cards immediately for instant response
-                loadRemainingCards(track, workingLocations, gradients, initialLoad);
-            } else if (!isMobile && workingLocations.length > initialLoad) {
-                // Load remaining cards immediately on desktop
-                loadRemainingCards(track, workingLocations, gradients, initialLoad);
-            }
+            // Create location info container
+            const locationInfo = document.createElement('div');
+            locationInfo.className = 'location-info';
+
+            // Create location name and state
+            const locationName = document.createElement('div');
+            locationName.className = 'location-name';
+            locationName.innerHTML = `<span class="tour-state">${location.state}</span> - ${location.name}`;
+            locationInfo.appendChild(locationName);
+
+            row.appendChild(locationInfo);
+
+            // Create date
+            const dateText = document.createElement('div');
+            dateText.className = 'date-text';
+            dateText.textContent = location.visitDate || 'TBD';
+            row.appendChild(dateText);
+
+            // Create description
+            const description = document.createElement('div');
+            description.className = 'date-description';
+            description.textContent = location.description;
+            row.appendChild(description);
+
+            return row;
         }
 
         // Optimized card creation using DOM methods instead of innerHTML
@@ -2388,7 +2407,7 @@
             // Force scroll to top first
             scrollToTop();
 
-            generateDestinationCards();
+            generateTourDates();
 
             // Simple initialization
             setTimeout(() => {
