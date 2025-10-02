@@ -98,7 +98,7 @@
                 coordinates: [-68.2251, 44.3527],
                 driveTime: "0",
                 hikeTime: "0",
-                visitDate: "October 1, 2025",
+                visitDate: "September 30, 2025",
                 description: "First light in America - the journey begins at the highest point along the North Atlantic seaboard"
             },
             {
@@ -109,7 +109,7 @@
                 coordinates: [-71.3032, 44.2706],
                 driveTime: "2h 46min",
                 hikeTime: "0",
-                visitDate: "October 2, 2025",
+                visitDate: "October 1, 2025",
                 description: "Above the clouds on the Northeast's highest peak"
             },
             {
@@ -120,7 +120,7 @@
                 coordinates: [-72.7103, 44.4669],
                 driveTime: "2h 52min",
                 hikeTime: "1h",
-                visitDate: "October 3, 2025",
+                visitDate: "October 2, 2025",
                 description: "Vermont's Green Mountains painted in sunset colors"
             },
             {
@@ -131,7 +131,7 @@
                 coordinates: [-73.9026, 44.3659],
                 driveTime: "2h 41min",
                 hikeTime: "5min",
-                visitDate: "October 4, 2025",
+                visitDate: "October 3, 2025",
                 description: "Adirondack wilderness and Olympic history"
             },
             {
@@ -142,7 +142,7 @@
                 coordinates: [-70.1873, 42.0584],
                 driveTime: "7h",
                 hikeTime: "0",
-                visitDate: "October 5, 2025",
+                visitDate: "October 4, 2025",
                 description: "Atlantic Ocean sunset at the tip of Cape Cod"
             },
             {
@@ -153,7 +153,7 @@
                 coordinates: [-71.3977, 41.4510],
                 driveTime: "1h 30min",
                 hikeTime: "0",
-                visitDate: "October 6, 2025",
+                visitDate: "October 5, 2025",
                 description: "Ocean State's dramatic coastal mansions and lighthouse views"
             },
             {
@@ -164,7 +164,7 @@
                 coordinates: [-72.5481, 41.2787],
                 driveTime: "1h 45min",
                 hikeTime: "0",
-                visitDate: "October 7, 2025",
+                visitDate: "October 6, 2025",
                 description: "Constitution State's longest shoreline with Long Island Sound views"
             },
             {
@@ -175,7 +175,7 @@
                 coordinates: [-74.8279, 40.8584],
                 driveTime: "3h",
                 hikeTime: "0",
-                visitDate: "October 8, 2025",
+                visitDate: "October 7, 2025",
                 description: "Garden State scenic overlook along the historic highway"
             },
             {
@@ -186,7 +186,7 @@
                 coordinates: [-75.1085, 38.6990],
                 driveTime: "2h",
                 hikeTime: "0",
-                visitDate: "October 9, 2025",
+                visitDate: "October 8, 2025",
                 description: "First State's hidden scenic viewpoint and countryside"
             },
             {
@@ -197,7 +197,7 @@
                 coordinates: [-76.3433, 39.8237],
                 driveTime: "2h 30min",
                 hikeTime: "1h 30min",
-                visitDate: "October 10, 2025",
+                visitDate: "October 9, 2025",
                 description: "Appalachian Trail's spectacular overlook of the Schuylkill River valley"
             },
             {
@@ -208,7 +208,7 @@
                 coordinates: [-78.6127, 39.6954],
                 driveTime: "2h",
                 hikeTime: "30min",
-                visitDate: "October 11, 2025",
+                visitDate: "October 10, 2025",
                 description: "Old Line State's hidden gem with panoramic Potomac River views"
             },
             {
@@ -219,7 +219,7 @@
                 coordinates: [-82.3657, 41.4217],
                 driveTime: "4h 30min",
                 hikeTime: "0",
-                visitDate: "October 12, 2025",
+                visitDate: "October 11, 2025",
                 description: "Great Lakes sunset with historic lighthouse silhouette"
             },
             {
@@ -230,7 +230,7 @@
                 coordinates: [-86.0581, 44.8834],
                 driveTime: "4h",
                 hikeTime: "1h 30min",
-                visitDate: "October 13, 2025",
+                visitDate: "October 12, 2025",
                 description: "Great Lakes State's massive sand dunes and Lake Michigan"
             },
             {
@@ -241,7 +241,7 @@
                 coordinates: [-87.0524, 41.6533],
                 driveTime: "2h 30min",
                 hikeTime: "0",
-                visitDate: "October 14, 2025",
+                visitDate: "October 13, 2025",
                 description: "Hoosier State's Lake Michigan shoreline and towering dunes"
             },
             {
@@ -252,7 +252,7 @@
                 coordinates: [-91.9182, 44.3316],
                 driveTime: "4h",
                 hikeTime: "30min",
-                visitDate: "October 15, 2025",
+                visitDate: "October 14, 2025",
                 description: "Badger State's Mississippi River bluff overlook"
             },
             {
@@ -263,7 +263,7 @@
                 coordinates: [-93.6633, 46.2041],
                 driveTime: "3h",
                 hikeTime: "0",
-                visitDate: "October 16, 2025",
+                visitDate: "October 15, 2025",
                 description: "Land of 10,000 Lakes' pristine waters and endless horizons"
             },
             {
@@ -274,7 +274,7 @@
                 coordinates: [-93.8191, 41.8780],
                 driveTime: "5h",
                 hikeTime: "0",
-                visitDate: "October 17, 2025",
+                visitDate: "October 16, 2025",
                 description: "Hawkeye State's iconic illuminated bridge over the Des Moines River"
             },
             {
@@ -285,7 +285,7 @@
                 coordinates: [-88.5403, 37.4477],
                 driveTime: "6h",
                 hikeTime: "0",
-                visitDate: "October 18, 2025",
+                visitDate: "October 17, 2025",
                 description: "Southern Illinois rock formations frame the sunset"
             },
             {
@@ -296,7 +296,7 @@
                 coordinates: [-83.6816, 37.8344],
                 driveTime: "3h",
                 hikeTime: "45min",
-                visitDate: "October 19, 2025",
+                visitDate: "October 18, 2025",
                 description: "Bluegrass State's dramatic sandstone arch and forest views"
             },
             {
@@ -307,7 +307,7 @@
                 coordinates: [-81.0784, 38.0702],
                 driveTime: "2h 30min",
                 hikeTime: "1h",
-                visitDate: "October 20, 2025",
+                visitDate: "October 19, 2025",
                 description: "Mountain State's iconic bridge and whitewater canyon"
             },
             {
@@ -318,7 +318,7 @@
                 coordinates: [-80.0781, 37.3783],
                 driveTime: "2h",
                 hikeTime: "2h",
-                visitDate: "October 21, 2025",
+                visitDate: "October 20, 2025",
                 description: "Old Dominion's most photographed spot on the Appalachian Trail"
             },
             {
@@ -329,7 +329,7 @@
                 coordinates: [-85.8397, 35.2431],
                 driveTime: "3h",
                 hikeTime: "1h",
-                visitDate: "October 22, 2025",
+                visitDate: "October 21, 2025",
                 description: "Volunteer State's dramatic Cumberland Plateau overlook"
             },
             {
@@ -340,7 +340,7 @@
                 coordinates: [-82.9626, 35.7965],
                 driveTime: "2h 30min",
                 hikeTime: "30min",
-                visitDate: "October 23, 2025",
+                visitDate: "October 22, 2025",
                 description: "Tar Heel State's 360-degree mountain views from grassy bald"
             },
             {
@@ -351,7 +351,7 @@
                 coordinates: [-82.6171, 35.0445],
                 driveTime: "1h 30min",
                 hikeTime: "15min",
-                visitDate: "October 24, 2025",
+                visitDate: "October 23, 2025",
                 description: "Palmetto State's thrilling cliff edge with mountain vistas"
             },
             {
@@ -362,7 +362,7 @@
                 coordinates: [-83.7577, 34.9498],
                 driveTime: "1h",
                 hikeTime: "1h",
-                visitDate: "October 25, 2025",
+                visitDate: "October 24, 2025",
                 description: "Peach State's hidden summit with Blue Ridge mountain panorama"
             },
             {
@@ -373,7 +373,7 @@
                 coordinates: [-85.8074, 30.1766],
                 driveTime: "6h",
                 hikeTime: "0",
-                visitDate: "October 26, 2025",
+                visitDate: "October 25, 2025",
                 description: "Emerald Coast sunset over the Gulf of Mexico"
             },
             {
@@ -384,7 +384,7 @@
                 coordinates: [-87.7008, 30.2460],
                 driveTime: "2h",
                 hikeTime: "0",
-                visitDate: "October 27, 2025",
+                visitDate: "October 26, 2025",
                 description: "Heart of Dixie's sugar-white sand beaches on the Gulf"
             },
             {
@@ -395,7 +395,7 @@
                 coordinates: [-91.4032, 31.5604],
                 driveTime: "3h",
                 hikeTime: "0",
-                visitDate: "October 28, 2025",
+                visitDate: "October 27, 2025",
                 description: "Magnolia State's historic bluffs overlooking the mighty Mississippi"
             },
             {
@@ -406,7 +406,7 @@
                 coordinates: [-94.0084, 32.6725],
                 driveTime: "4h",
                 hikeTime: "0",
-                visitDate: "October 29, 2025",
+                visitDate: "October 28, 2025",
                 description: "Mystical swampland cypress trees silhouetted at sunset"
             },
             {
@@ -417,7 +417,7 @@
                 coordinates: [-92.9046, 35.1088],
                 driveTime: "3h",
                 hikeTime: "45min",
-                visitDate: "October 30, 2025",
+                visitDate: "October 29, 2025",
                 description: "Natural State's first state park and Cedar Falls"
             },
             {
@@ -428,7 +428,7 @@
                 coordinates: [-93.2835, 36.6059],
                 driveTime: "3h",
                 hikeTime: "0",
-                visitDate: "October 31, 2025",
+                visitDate: "October 30, 2025",
                 description: "Show-Me State's premier golf course with Ozark mountain views"
             },
             {
@@ -439,7 +439,7 @@
                 coordinates: [-96.4169, 36.8450],
                 driveTime: "4h",
                 hikeTime: "0",
-                visitDate: "November 1, 2025",
+                visitDate: "October 31, 2025",
                 description: "Sooner State's endless prairie grasslands under big sky"
             },
             {
@@ -450,7 +450,7 @@
                 coordinates: [-102.0377, 39.0219],
                 driveTime: "6h",
                 hikeTime: "0",
-                visitDate: "November 2, 2025",
+                visitDate: "November 1, 2025",
                 description: "Sunflower State's highest point amid endless wheat fields"
             },
             {
@@ -461,7 +461,7 @@
                 coordinates: [-104.8607, 31.8913],
                 driveTime: "8h",
                 hikeTime: "2h",
-                visitDate: "November 3, 2025",
+                visitDate: "November 2, 2025",
                 description: "Highest point in Texas with endless desert vistas"
             },
             {
@@ -472,7 +472,7 @@
                 coordinates: [-106.1711, 32.7872],
                 driveTime: "3h",
                 hikeTime: "0",
-                visitDate: "November 4, 2025",
+                visitDate: "November 3, 2025",
                 description: "Pristine white gypsum dunes create an otherworldly sunset"
             },
             {
@@ -483,7 +483,7 @@
                 coordinates: [-110.1735, 36.9869],
                 driveTime: "8h",
                 hikeTime: "0",
-                visitDate: "November 5, 2025",
+                visitDate: "November 4, 2025",
                 description: "Iconic red sandstone buttes define the American Southwest"
             },
             {
@@ -494,7 +494,7 @@
                 coordinates: [-107.9132, 37.9578],
                 driveTime: "4h 20min",
                 hikeTime: "0",
-                visitDate: "November 6, 2025",
+                visitDate: "November 5, 2025",
                 description: "Fall aspens and snow-capped peaks in the Rockies"
             },
             {
@@ -505,7 +505,7 @@
                 coordinates: [-109.9225, 38.3186],
                 driveTime: "5h",
                 hikeTime: "30min",
-                visitDate: "November 7, 2025",
+                visitDate: "November 6, 2025",
                 description: "Beehive State's dramatic canyon vistas and winding river"
             },
             {
@@ -516,7 +516,7 @@
                 coordinates: [-110.8021, 43.7904],
                 driveTime: "6h",
                 hikeTime: "0",
-                visitDate: "November 8, 2025",
+                visitDate: "November 7, 2025",
                 description: "Majestic mountain reflections in pristine alpine lakes"
             },
             {
@@ -527,7 +527,7 @@
                 coordinates: [-103.3003, 41.7033],
                 driveTime: "4h",
                 hikeTime: "0",
-                visitDate: "November 9, 2025",
+                visitDate: "November 8, 2025",
                 description: "Cornhusker State's iconic Oregon Trail landmark"
             },
             {
@@ -538,7 +538,7 @@
                 coordinates: [-102.3378, 43.8554],
                 driveTime: "3h",
                 hikeTime: "0",
-                visitDate: "November 10, 2025",
+                visitDate: "November 9, 2025",
                 description: "Mount Rushmore State's otherworldly landscape and fossil beds"
             },
             {
@@ -549,7 +549,7 @@
                 coordinates: [-103.4387, 46.9788],
                 driveTime: "5h",
                 hikeTime: "0",
-                visitDate: "November 11, 2025",
+                visitDate: "November 10, 2025",
                 description: "Peace Garden State's badlands and painted canyons"
             },
             {
@@ -560,7 +560,7 @@
                 coordinates: [-113.5360, 48.6966],
                 driveTime: "6h",
                 hikeTime: "0",
-                visitDate: "November 12, 2025",
+                visitDate: "November 11, 2025",
                 description: "Glacier National Park's most photographed location"
             },
             {
@@ -571,7 +571,7 @@
                 coordinates: [-115.0731, 43.7185],
                 driveTime: "7h",
                 hikeTime: "2h",
-                visitDate: "November 13, 2025",
+                visitDate: "November 12, 2025",
                 description: "Gem State's remote peak with endless wilderness views"
             },
             {
@@ -582,7 +582,7 @@
                 coordinates: [-121.8450, 46.9069],
                 driveTime: "5h",
                 hikeTime: "2h 30min",
-                visitDate: "November 14, 2025",
+                visitDate: "November 13, 2025",
                 description: "Evergreen State's stunning Mount Rainier and alpine lake views"
             },
             {
@@ -593,7 +593,7 @@
                 coordinates: [-123.9615, 45.8917],
                 driveTime: "3h",
                 hikeTime: "0",
-                visitDate: "November 15, 2025",
+                visitDate: "November 14, 2025",
                 description: "Pacific Coast's iconic Haystack Rock at golden hour"
             },
             {
@@ -604,7 +604,7 @@
                 coordinates: [-119.9772, 39.0968],
                 driveTime: "8h",
                 hikeTime: "0",
-                visitDate: "November 16, 2025",
+                visitDate: "November 15, 2025",
                 description: "Silver State's pristine alpine lake surrounded by snow-capped peaks"
             },
             {
@@ -615,7 +615,7 @@
                 coordinates: [-122.4994, 37.8255],
                 driveTime: "4h",
                 hikeTime: "0",
-                visitDate: "November 17, 2025",
+                visitDate: "November 16, 2025",
                 description: "Golden Gate Bridge wrapped in San Francisco fog"
             },
             {
@@ -627,7 +627,7 @@
                 driveTime: "0",
                 flightTime: "4h",
                 hikeTime: "15min",
-                visitDate: "November 18, 2025",
+                visitDate: "November 17, 2025",
                 description: "Last frontier wilderness with endless mountain views"
             },
             {
@@ -639,7 +639,7 @@
                 driveTime: "1h",
                 flightTime: "8h",
                 hikeTime: "0",
-                visitDate: "November 19, 2025",
+                visitDate: "November 18, 2025",
                 description: "Above the clouds at the House of the Sun - journey's end"
             }
         ];
