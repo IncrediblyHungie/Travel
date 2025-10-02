@@ -87,7 +87,49 @@
         });
 
         // Journey Map Data and Functions
-        let currentJourneyDay = 1; // Currently at Maine - the beginning of the journey
+
+        // Function to get current journey day based on today's date
+        function getCurrentJourneyDayByDate() {
+            const today = new Date();
+            const monthNames = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+
+            // Format today's date to match visitDate format (e.g., "October 2, 2025")
+            const todayFormatted = `${monthNames[today.getMonth()]} ${today.getDate()}, 2025`;
+
+            console.log(`📅 Today's date: ${todayFormatted}`);
+
+            // Find the location that matches today's date
+            for (let i = 0; i < journeyLocations.length; i++) {
+                if (journeyLocations[i].visitDate === todayFormatted) {
+                    console.log(`🎯 Current location: ${journeyLocations[i].state} - ${journeyLocations[i].name}`);
+                    return i + 1; // Return 1-based index
+                }
+            }
+
+            // If no exact match, find the nearest date
+            // Check if we're before the journey starts
+            const journeyStart = new Date('September 30, 2025');
+            if (today < journeyStart) {
+                console.log('🗓️ Journey hasn\'t started yet - showing first location');
+                return 1; // Show first location
+            }
+
+            // Check if we're after the journey ends
+            const journeyEnd = new Date('November 18, 2025');
+            if (today > journeyEnd) {
+                console.log('🎊 Journey completed - showing last location');
+                return 50; // Show last location
+            }
+
+            // For dates during the journey but not exact matches, find closest
+            console.log('📍 No exact date match - showing first location as fallback');
+            return 1;
+        }
+
+        let currentJourneyDay = 1; // Will be updated dynamically based on date
 
         const journeyLocations = [
             {
@@ -643,6 +685,10 @@
                 description: "Above the clouds at the House of the Sun - journey's end"
             }
         ];
+
+        // Initialize current journey day based on today's date
+        currentJourneyDay = getCurrentJourneyDayByDate();
+        console.log(`🗺️ Map initialized with current journey day: ${currentJourneyDay}`);
 
         // Environment variable support for Netlify configuration
         const DAYS_TO_SHOW = parseInt(window.DAYS_TO_SHOW || 3); // Default: 3 days

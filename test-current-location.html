@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Current Location by Date</title>
+    <script src="env.js"></script>
+</head>
+<body>
+    <h1>🗺️ Testing Dynamic Current Location by Date</h1>
+    <p>This test verifies that the current location updates based on today's date</p>
+
+    <div style="background: #f0f8ff; padding: 20px; border-radius: 10px; margin: 20px 0;">
+        <h3>Test Results:</h3>
+        <div id="test-results"></div>
+    </div>
+
+    <div style="background: #fff9e6; padding: 20px; border-radius: 10px; margin: 20px 0;">
+        <h3>Simulate Different Dates:</h3>
+        <button onclick="testSpecificDate('September 30, 2025')">Test Sept 30 (Maine)</button>
+        <button onclick="testSpecificDate('October 1, 2025')">Test Oct 1 (New Hampshire)</button>
+        <button onclick="testSpecificDate('October 2, 2025')">Test Oct 2 (Vermont)</button>
+        <button onclick="testSpecificDate('October 15, 2025')">Test Oct 15 (Wisconsin)</button>
+        <button onclick="testSpecificDate('November 18, 2025')">Test Nov 18 (Hawaii)</button>
+        <button onclick="testToday()">Test Today's Date</button>
+    </div>
+
+    <script>
+        // Load the main script and run tests
+        const script = document.createElement('script');
+        script.src = 'script.js';
+        script.onload = function() {
+            testCurrentLocation();
+        };
+        document.head.appendChild(script);
+
+        function testCurrentLocation() {
+            const resultsDiv = document.getElementById('test-results');
+            const today = new Date();
+            const monthNames = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+
+            const todayFormatted = `${monthNames[today.getMonth()]} ${today.getDate()}, 2025`;
+
+            resultsDiv.innerHTML = `
+                <h4>📅 Today's Date: ${today.toDateString()}</h4>
+                <h4>📍 Formatted for Journey: ${todayFormatted}</h4>
+                <h4>🎯 Current Journey Day: ${currentJourneyDay}</h4>
+                <h4>📍 Current Location: ${journeyLocations[currentJourneyDay - 1].state} - ${journeyLocations[currentJourneyDay - 1].name}</h4>
+                <h4>🗓️ Location's Visit Date: ${journeyLocations[currentJourneyDay - 1].visitDate}</h4>
+            `;
+
+            // Verify the date matching worked
+            if (journeyLocations[currentJourneyDay - 1].visitDate === todayFormatted) {
+                resultsDiv.innerHTML += '<h3 style="color: green;">✅ SUCCESS: Date matching is working correctly!</h3>';
+            } else {
+                resultsDiv.innerHTML += '<h3 style="color: orange;">⚠️ Note: Today does not match any journey date, showing fallback location</h3>';
+            }
+        }
+
+        function testSpecificDate(dateString) {
+            // Find which location matches this date
+            let matchedDay = null;
+            for (let i = 0; i < journeyLocations.length; i++) {
+                if (journeyLocations[i].visitDate === dateString) {
+                    matchedDay = i + 1;
+                    break;
+                }
+            }
+
+            const resultsDiv = document.getElementById('test-results');
+            if (matchedDay) {
+                resultsDiv.innerHTML = `
+                    <h4>📅 Testing Date: ${dateString}</h4>
+                    <h4>🎯 Would Show Day: ${matchedDay}</h4>
+                    <h4>📍 Location: ${journeyLocations[matchedDay - 1].state} - ${journeyLocations[matchedDay - 1].name}</h4>
+                    <h3 style="color: green;">✅ Date found in journey!</h3>
+                `;
+            } else {
+                resultsDiv.innerHTML = `
+                    <h4>📅 Testing Date: ${dateString}</h4>
+                    <h3 style="color: red;">❌ Date not found in journey locations</h3>
+                `;
+            }
+        }
+
+        function testToday() {
+            testCurrentLocation();
+        }
+    </script>
+</body>
+</html>
