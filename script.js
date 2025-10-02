@@ -1640,7 +1640,7 @@
             // Create location name and state
             const locationName = document.createElement('div');
             locationName.className = 'location-name';
-            locationName.innerHTML = `<span class="tour-state">${location.state}</span> - ${location.name}`;
+            locationName.innerHTML = `<span class="tour-state">${location.state}</span> • ${location.name}`;
             locationInfo.appendChild(locationName);
 
             row.appendChild(locationInfo);
@@ -1648,7 +1648,13 @@
             // Create date
             const dateText = document.createElement('div');
             dateText.className = 'date-text';
-            dateText.textContent = location.visitDate || 'TBD';
+            // Format date more compactly
+            if (location.visitDate) {
+                const dateParts = location.visitDate.split(' ');
+                dateText.textContent = `${dateParts[0].substring(0, 3)} ${dateParts[1].replace(',', '')}`;
+            } else {
+                dateText.textContent = 'TBD';
+            }
             row.appendChild(dateText);
 
             // Create description
