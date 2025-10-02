@@ -1283,6 +1283,26 @@
                 return routeCache[routeId];
             }
 
+            // Check if this is a flight route (California to Alaska, or Alaska to Hawaii)
+            const routeParts = routeId.split('-');
+            const startId = parseInt(routeParts[0]);
+            const endId = parseInt(routeParts[1]);
+
+            // Check for flight routes: 48->49 (CA to AK) and 49->50 (AK to HI)
+            const isFlightRoute = (startId === 48 && endId === 49) || (startId === 49 && endId === 50);
+
+            if (isFlightRoute) {
+                // For flight routes, just create a simple straight line
+                const geometry = {
+                    type: 'LineString',
+                    coordinates: [startCoords, endCoords]
+                };
+                routeCache[routeId] = geometry;
+                console.log(`Flight route created for ${routeId} - straight line from CA to AK or AK to HI`);
+                return geometry;
+            }
+
+            // For driving routes, use the existing Mapbox directions API
             try {
                 const query = await fetch(
                     `https://api.mapbox.com/directions/v5/mapbox/driving/${startCoords[0]},${startCoords[1]};${endCoords[0]},${endCoords[1]}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`,
